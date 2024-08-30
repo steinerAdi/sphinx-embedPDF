@@ -17,7 +17,7 @@ author = 'Adrian STEINER'
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 sys.path.append(os.path.abspath("../../sphinxEmbedPDF/"))
-extensions = ['embedpdf',
+extensions = ['sphinx_embedpdf',
               'sphinx_copybutton']
 
 templates_path = ['_templates']
