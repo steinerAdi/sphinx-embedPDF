@@ -6,14 +6,19 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'Embed PDF test'
+import os
+import sys
+
+project = 'Embed PDF Doc'
 copyright = '2024, Adrian STEINER'
 author = 'Adrian STEINER'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = []
+sys.path.append(os.path.abspath("../../sphinxEmbedPDF/"))
+extensions = ['embedpdf',
+              'sphinx_copybutton']
 
 templates_path = ['_templates']
 exclude_patterns = []
