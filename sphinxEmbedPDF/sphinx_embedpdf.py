@@ -3,6 +3,7 @@ from __future__ import annotations
 from docutils import nodes
 
 import os
+from pathlib import Path
 
 from docutils.parsers.rst import directives
 from sphinx.application import Sphinx
@@ -64,6 +65,22 @@ def download_html(link: str, name = "", symbol = True) -> str:
 
     return htmlText
 
+def embed_pdf_html(link: str, ratio: int, width: int, alt: str):
+    return f'<div align="center">\
+            <object \
+            id = "showPDF"\
+            data=""\
+            type="application/pdf" \
+            style="">\
+            <p><div align="left">{alt}</p>\
+            </object>\
+            <script>\
+            pdfViewer = document.getElementById("showPDF");\
+            pdfViewer.data = PDF_VIEWER.getSrcName("{link}");\
+            pdfViewer.style = PDF_VIEWER.getStyle("{ratio}", "{width}");\
+            </script>'
+
+
 
     
 def link_newTab(role, rawsource, text, lineno, self):
@@ -103,14 +120,14 @@ class PDF_Title_Directive(SphinxDirective):
         "download": directives.flag,
         "newtab": directives.flag,
         "header": directives.nonnegative_int,
-        "alt": directives.unchanged
+        "alt": directives.unchanged,
+        "hidepdf": directives.flag
     }
 
     def run(self) -> list[nodes.Node]:
 
         path = self.arguments[0]
         pdf_name = os.path.basename(path)
-        print(f"Options: {self.options}\n")
 
         try:
             name = self.options["name"]
@@ -136,20 +153,33 @@ class PDF_Title_Directive(SphinxDirective):
 
         htmlCode = f'<h{header}>{name}{downloadCode}{newTabCode}</h{header}>'
 
-        paragraph_node = nodes.raw(text=htmlCode, format='html')
+        try: 
+            alt = self.options["alt"]
+        except:
+            alt = 'Cannot display PDF, please download it with the link above.'
+
+        try: 
+            self.options["hidepdf"]
+            pdfCode = ""
+        except:
+            pdfCode = embed_pdf_html(path, 215/274, "95%", alt)
+
+        paragraph_node = nodes.raw(text=htmlCode+pdfCode, format='html')
 
         return [nodes.header(), paragraph_node]
 
 
 def setup(app: Sphinx) -> ExtensionMetadata:
-
-    app.add_role('hello', HelloRole())
-    app.add_directive('hello', HelloDirective)
     app.add_directive('embedpdf', PDF_Title_Directive)
     app.add_role('ntLink', link_newTab)
-    app.add_css_file("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,300,0,0")
+    app.add_css_file("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@40,200,0,0")
+    app.add_css_file("_static/embedpdf.css")
+    app.add_js_file("pdfViewer.js")
+    app.add_js_file("_static/pdfViewer.js")
+    app.config.html_static_path.append(str(Path(__file__).parent.joinpath("resources")))
+    
     return {
-        'version': '0.1',
+        'version': __version__,
         'parallel_read_safe': True,
         'parallel_write_safe': True,
     }

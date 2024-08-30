@@ -1,12 +1,6 @@
 Embed PDF test documentation
 ============================
 
-Test page for all new roles.
-
-.. hello:: world
-
-Some text with a :hello:`world` role.
-
 To add a new-tab link, use the following code:
 
 .. code-block:: rst
@@ -24,4 +18,5 @@ PDF Page can be used to set a title including a download icon and new tab icon
 Which results in:
 
 .. embedpdf:: /_static/sample.pdf
+   :alt: Alternative text to show pdf is not visible
 
