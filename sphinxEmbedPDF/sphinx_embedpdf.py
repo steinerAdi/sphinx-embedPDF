@@ -81,14 +81,19 @@ def link_newTab(role, rawsource, text, lineno, self):
     node = nodes.raw(text=new_tab_link_html(link=link, name=name, symbol=withSymbol), format='html')
     return [node], []
 
+
+def headerLink(ref: str) -> str:
+    headerLinkHTML = f'<a class="headerlink" href="#{ref}" title="Link to this heading">¶</a>'
+    return headerLinkHTML
+
 class PDF_Title_Directive(SphinxDirective):
 
     required_arguments = 1
 
     option_spec = {
         "name": directives.unchanged ,
-        "download": directives.flag,
-        "newtab": directives.flag,
+        "hidedownload": directives.flag,
+        "hidenewtab": directives.flag,
         "header": directives.nonnegative_int,
         "alt": directives.unchanged,
         "hidepdf": directives.flag
@@ -97,7 +102,7 @@ class PDF_Title_Directive(SphinxDirective):
     def run(self) -> list[nodes.Node]:
 
         path = self.arguments[0]
-        pdf_name = os.path.basename(path)
+        pdf_name = Path(path).stem
 
         try:
             name = self.options["name"]
@@ -110,18 +115,21 @@ class PDF_Title_Directive(SphinxDirective):
             header = 1
 
         try: 
-            self.options['download']
+            self.options['hidedownload']
             downloadCode = ''
         except:
             downloadCode = download_html(link=path)
 
         try:
-            self.options["newtab"]
+            self.options["hidenewtab"]
             newTabCode = ""
         except:
             newTabCode = new_tab_link_html(path)
+        
 
-        htmlHeaderCode = f'<h{header}>{name}{downloadCode}{newTabCode}</h{header}>'
+        headerId = name.replace(" ", "-")
+
+        htmlHeaderCode = f'<h{header} id="{headerId}">{name}{downloadCode}{newTabCode}{headerLink(headerId)}</h{header}>'
 
         try: 
             alt = self.options["alt"]
@@ -143,9 +151,8 @@ def setup(app: Sphinx) -> ExtensionMetadata:
     app.add_directive('embedpdf', PDF_Title_Directive)
     app.add_role('ntLink', link_newTab)
     app.add_css_file("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@40,200,0,0")
-    app.add_css_file("_static/embedpdf.css")
+    app.add_css_file("embedpdf.css")
     app.add_js_file("pdfViewer.js")
-    app.add_js_file("_static/pdfViewer.js")
     app.config.html_static_path.append(str(Path(__file__).parent.joinpath("resources")))
     
     return {
