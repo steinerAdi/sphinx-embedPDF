@@ -28,8 +28,9 @@ Which results in:
    :ratio: 75
 
 
-.. toctree::
+.. toctree:: 
    :hidden:
+   :caption: Content
 
    gettingStarted.rst
    faq.rst
