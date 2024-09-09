@@ -158,7 +158,6 @@ class PDF_Title_Directive(SphinxDirective):
                 width = 0
 
             pdfCode = embed_pdf_html(path, ratio, width, alt)
-            print(pdfCode)
 
         paragraph_node = nodes.raw(text=htmlHeaderCode+pdfCode, format='html')
 

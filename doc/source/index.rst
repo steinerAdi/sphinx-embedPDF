@@ -26,3 +26,10 @@ Which results in:
    :name: Embed PDF Sample
    :width: 95
    :ratio: 75
+
+
+.. toctree::
+   :hidden:
+
+   gettingStarted.rst
+   faq.rst
