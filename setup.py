@@ -39,5 +39,4 @@ setup(
     },
     include_package_data=True,
     install_requires=requires,
-    namespace_packages=['sphinx_embedpdf'],
 )
