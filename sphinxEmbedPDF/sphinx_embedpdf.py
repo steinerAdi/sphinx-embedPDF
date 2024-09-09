@@ -38,19 +38,24 @@ def download_html(link: str, name = "", symbol = True) -> str:
 
     return htmlText
 
-def embed_pdf_html(link: str, ratio: int, width: int, alt: str):
+def embed_pdf_html(link: str, ratio: float, width: int, alt: str):
+    styleSettings = ""
+    if 0 != width:
+        styleSettings += f'width:{width}%; '
+    if 0 != ratio:
+        styleSettings += f'aspect-ratio:{ratio};'
+
     return f'<div align="center">\
             <object \
             id = "showPDF"\
-            data=""\
             type="application/pdf" \
-            style="">\
+            class="embedpdf"\
+            style="{styleSettings}">\
             <p><div align="left">{alt}</p>\
             </object>\
             <script>\
             pdfViewer = document.getElementById("showPDF");\
             pdfViewer.data = PDF_VIEWER.getSrcName("{link}");\
-            pdfViewer.style = PDF_VIEWER.getStyle("{ratio}", "{width}");\
             </script>'
     
 def link_newTab(role, rawsource, text, lineno, self):
@@ -96,7 +101,9 @@ class PDF_Title_Directive(SphinxDirective):
         "hidenewtab": directives.flag,
         "header": directives.nonnegative_int,
         "alt": directives.unchanged,
-        "hidepdf": directives.flag
+        "hidepdf": directives.flag,
+        "ratio": directives.percentage,
+        "width": directives.percentage
     }
 
     def run(self) -> list[nodes.Node]:
@@ -140,7 +147,18 @@ class PDF_Title_Directive(SphinxDirective):
             self.options["hidepdf"]
             pdfCode = ""
         except:
-            pdfCode = embed_pdf_html(path, 215/274, "95%", alt)
+            try:
+                ratio = self.options["ratio"]/100
+            except:
+                ratio = 0
+            
+            try: 
+                width = self.options["width"]
+            except:
+                width = 0
+
+            pdfCode = embed_pdf_html(path, ratio, width, alt)
+            print(pdfCode)
 
         paragraph_node = nodes.raw(text=htmlHeaderCode+pdfCode, format='html')
 

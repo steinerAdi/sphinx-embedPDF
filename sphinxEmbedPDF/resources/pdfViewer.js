@@ -19,6 +19,6 @@ var PDF_VIEWER = {
 
     // GENERATE THE STYLE WITH THE WIDTH AND THE CORRESPONDING RATIO
     getStyle: function (ratio, width = this.default.width) {
-        return "width:" + width + "; height: auto; aspect-ratio:" + ratio + ";";
+        return "width:" + width + "; aspect-ratio:" + ratio + ";";
     }
 }
