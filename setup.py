@@ -6,8 +6,8 @@ with open("README.md", "r") as readme:
 requires = ['Sphinx>=7.0', 'setuptools']
 
 setup(
-    name='sphinx-embedPDF',
-    version='0.1',
+    name='sphinx_embedpdf',
+    version='0.0.1',
     url='https://github.com/steinerAdi/sphinx-embedPDF.git',
     download_url='https://github.com/steinerAdi/sphinx-embedPDF.git',
     license='MIT',
@@ -32,5 +32,5 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     install_requires=requires,
-    namespace_packages=['sphinxEmbedPDF'],
+    namespace_packages=['sphinx_embedpdf'],
 )
