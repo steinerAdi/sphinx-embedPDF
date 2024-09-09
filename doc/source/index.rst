@@ -7,7 +7,7 @@ To add a new-tab link, use the following code:
 
    :ntLink:`src:https://www.google.com, name:google, symbol:True`
 
-Which results with: :ntLink:`src:https://www.google.com, name:google, symbol:True`.
+Which results in: :ntLink:`src:https://www.google.com, name:google, symbol:True`.
 
 PDF Page can be used to set a title including a download icon and new tab icon
 

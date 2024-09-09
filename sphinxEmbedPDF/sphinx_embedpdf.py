@@ -17,33 +17,6 @@ __author__ = "Adrian STEINER"
 __version__ = "0.0.1"
 
 logger = logging.getLogger(__name__)
-
-class HelloRole(SphinxRole):
-
-    """A role to say hello!"""
-
-
-    def run(self) -> tuple[list[nodes.Node], list[nodes.system_message]]:
-
-        node = nodes.inline(text=f'Hello {self.text}!')
-
-        return [node], []
-
-
-
-class HelloDirective(SphinxDirective):
-
-    """A directive to say hello!"""
-
-
-    required_arguments = 1
-
-
-    def run(self) -> list[nodes.Node]:
-
-        paragraph_node = nodes.paragraph(text=f'hello {self.arguments[0]}!')
-
-        return [paragraph_node]
     
 def new_tab_link_html(link: str, name = "", symbol = True) -> str:
 
@@ -79,9 +52,6 @@ def embed_pdf_html(link: str, ratio: int, width: int, alt: str):
             pdfViewer.data = PDF_VIEWER.getSrcName("{link}");\
             pdfViewer.style = PDF_VIEWER.getStyle("{ratio}", "{width}");\
             </script>'
-
-
-
     
 def link_newTab(role, rawsource, text, lineno, self):
     text = text.replace(' ', '')
@@ -151,7 +121,7 @@ class PDF_Title_Directive(SphinxDirective):
         except:
             newTabCode = new_tab_link_html(path)
 
-        htmlCode = f'<h{header}>{name}{downloadCode}{newTabCode}</h{header}>'
+        htmlHeaderCode = f'<h{header}>{name}{downloadCode}{newTabCode}</h{header}>'
 
         try: 
             alt = self.options["alt"]
@@ -164,7 +134,7 @@ class PDF_Title_Directive(SphinxDirective):
         except:
             pdfCode = embed_pdf_html(path, 215/274, "95%", alt)
 
-        paragraph_node = nodes.raw(text=htmlCode+pdfCode, format='html')
+        paragraph_node = nodes.raw(text=htmlHeaderCode+pdfCode, format='html')
 
         return [nodes.header(), paragraph_node]
 
