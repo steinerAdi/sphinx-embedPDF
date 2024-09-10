@@ -17,7 +17,7 @@ version = 'v0.0.1'
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-sys.path.append(os.path.abspath("../../sphinxEmbedPDF/"))
+sys.path.append(os.path.abspath("../../sphinx_embedpdf/"))
 extensions = ['sphinx_embedpdf',
               'sphinx_copybutton',
               'sphinx_rtd_theme']

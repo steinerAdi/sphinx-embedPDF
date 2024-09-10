@@ -1,17 +1,17 @@
+"""
+Sphinx embed PDF into websites including controlling the page of the PDF.
+@author Adrian STEINER
+"""
+
 from __future__ import annotations
-
 from docutils import nodes
-
-import os
 from pathlib import Path
-
 from docutils.parsers.rst import directives
 from sphinx.application import Sphinx
 from sphinx.util.docutils import SphinxDirective, SphinxRole
 from sphinx.util.typing import ExtensionMetadata
 from sphinx.util import logging
 
-import json
 
 __author__ = "Adrian STEINER"
 __version__ = "0.0.1"
@@ -19,7 +19,6 @@ __version__ = "0.0.1"
 logger = logging.getLogger(__name__)
     
 def new_tab_link_html(link: str, name = "", symbol = True) -> str:
-
     if symbol:
         symbolText = '<span class="material-symbols-outlined">open_in_new</span>'
     else:
