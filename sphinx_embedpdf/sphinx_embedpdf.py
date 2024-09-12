@@ -55,7 +55,8 @@ def embed_pdf_html(link: str, ratio: float, width: int, alt: str):
             <script>\
             pdfViewer = document.getElementById("showPDF");\
             pdfViewer.data = PDF_VIEWER.getSrcName("{link}");\
-            </script>'
+            </script> \
+            </div>'
     
 def link_newTab(role, rawsource, text, lineno, self):
     text = text.replace(' ', '')

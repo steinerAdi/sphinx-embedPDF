@@ -27,10 +27,12 @@ Which results in:
    :width: 95
    :ratio: 75
 
+Further features are in coming.
 
 .. toctree:: 
    :hidden:
    :caption: Content
 
    gettingStarted.rst
+   example.rst
    faq.rst
