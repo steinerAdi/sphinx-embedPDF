@@ -48,19 +48,11 @@ def embed_pdf_html(link: str, ratio: float, width: int, alt: str):
     if 0 != ratio:
         styleSettings += f'aspect-ratio:{ratio};'
 
-    return f'<div align="center">\
-            <object \
-            id = "showPDF"\
-            type="application/pdf" \
-            class="embedpdf"\
-            style="{styleSettings}">\
-            <p><div align="left">{alt}</p>\
-            </object>\
-            <script>\
-            pdfViewer = document.getElementById("showPDF");\
-            pdfViewer.data = PDF_VIEWER.getSrcName("{link}");\
-            </script> \
-            </div>'
+    embed_script = html_command(command="script", text=f'pdfViewer = document.getElementById("showPDF"); pdfViewer.data = PDF_VIEWER.getSrcName("{link}");')
+    alternate_text = html_command(command='p', text=f'<div align="left">{alt}')
+    embed_html = html_command(command="object", command_features=f'id = "showPDF" type="application/pdf" class="embedpdf" style="{styleSettings}"', text=alternate_text)
+    total_html = html_command(command='div', command_features='align="center"', text=embed_html+embed_script)
+    return total_html
     
 def link_newTab(role, rawsource, text, lineno, self):
     text = text.replace(' ', '')
