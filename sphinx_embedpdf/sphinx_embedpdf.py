@@ -67,11 +67,12 @@ def embed_pdf_html(link: str, ratio: float, width: int, alt: str, id: str):
         styleSettings += f"width:{width}%; "
     if 0 != ratio:
         styleSettings += f"aspect-ratio:{ratio};"
-
-    embed_script = html_command(
+    embed_script =  html_command(command='script', command_features='src="/_static/pdfViewer.js"')
+    embed_script += html_command(
         command="script",
         text=f'pdfViewer = document.getElementById("{id}"); pdfViewer.data = PDF_VIEWER.getSrcName("{link}");',
     )
+    print(embed_script)
     alternate_text = html_command(command="div", command_features='align="left"', text=alt)
     alternate_text = html_command(command="p", text=alternate_text)
     embed_html = html_command(
@@ -224,7 +225,6 @@ def setup(app: Sphinx) -> ExtensionMetadata:
         "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@40,200,0,0"
     )
     app.add_css_file("embedpdf.css")
-    app.add_js_file("pdfViewer.js")
     app.config.html_static_path.append(str(Path(__file__).parent.joinpath("resources")))
 
     return {
