@@ -20,7 +20,8 @@ version = 'v0.0.1'
 sys.path.append(os.path.abspath("../../sphinx_embedpdf/"))
 extensions = ['sphinx_embedpdf',
               'sphinx_copybutton',
-              'sphinx_rtd_theme']
+              'sphinx_rtd_theme'
+              ]
 
 templates_path = ['_templates']
 exclude_patterns = []
@@ -44,17 +45,16 @@ html_context = {
 }
 
 html_theme_options = {
-    'logo_only': False,
-    'display_version': True,
-    'prev_next_buttons_location': 'bottom',
-    'style_external_links': True,
+#    'logo_only': False,
+#    'prev_next_buttons_location': 'bottom',
+#    'style_external_links': True,
 #    'vcs_pageview_mode': 'display_github',
 #    'style_nav_header_background': 'black',
 #    # Toc options
-    'collapse_navigation': False,
-    'sticky_navigation': True,
-    'navigation_depth': 4,
-    'includehidden': True,
+#    'collapse_navigation': False,
+#    'sticky_navigation': True,
+#    'navigation_depth': 4,
+#    'includehidden': True,
 #    'titles_only': False
 }
 
