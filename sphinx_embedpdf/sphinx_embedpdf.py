@@ -1,6 +1,7 @@
 """
 Sphinx embed PDF into websites including controlling the page of the PDF.
 @author Adrian STEINER
+@copyright Copyright (c) 2024 Adrian STEINER under MIT
 """
 
 from __future__ import annotations
@@ -12,30 +13,33 @@ from sphinx.util.docutils import SphinxDirective, SphinxRole
 from sphinx.util.typing import ExtensionMetadata
 from sphinx.util import logging
 
-
 __author__ = "Adrian STEINER"
 __version__ = "0.0.1"
 
 logger = logging.getLogger(__name__)
-    
+
+def html_command(command: str, command_features="", text="")->str:
+    return f"<{command} {command_features}>{text}</{command}>"
+
 def new_tab_link_html(link: str, name = "", symbol = True) -> str:
     if symbol:
-        symbolText = '<span class="material-symbols-outlined">open_in_new</span>'
+        symbolText = html_command(command='span', command_features='class="material-symbols-outlined" title="Open in new tab"', text="open_in_new") 
     else:
         symbolText = ""
 
-    htmlText = f'<a href="{link}" target="_blank" rel="noopener noreferrer">{name}{symbolText}</a>'
-    return htmlText
+    html_text = html_command(command='a', command_features=f'href="{link}" target="_blank" rel="noopener noreferrer"', text=f'{name}{symbolText}')
+    html_text = html_command(command='object',text=html_text)
+    return html_text
 
 def download_html(link: str, name = "", symbol = True) -> str:
     if symbol:
-        symbolText = '<span class="material-symbols-outlined">download</span>'
+        symbolText = html_command(command='span', command_features='class="material-symbols-outlined" title="Download"', text='download') 
     else:
         symbolText = ''
     
-    htmlText = f'<a class="reference download internal" download="" href="{link}">{symbolText}</a>'
-
-    return htmlText
+    html_text = html_command(command='a', command_features=f'class="reference download internal" download="" href="{link}"', text=f'{name}{symbolText}')
+    html_text = html_command(command='object', text=html_text)
+    return html_text
 
 def embed_pdf_html(link: str, ratio: float, width: int, alt: str):
     styleSettings = ""
@@ -87,6 +91,36 @@ def link_newTab(role, rawsource, text, lineno, self):
     return [node], []
 
 
+def download_pdf(role, rawsource, text, lineno, self):
+
+    text = text.replace(' ', '')
+    arguments = {}
+    # read specs
+    for component in text.split(','):
+         arguments[component.split(':')[0]] = component.split(':', 1)[1]
+        
+    try:
+        link = arguments['src']
+    except:
+        return
+    
+    try:
+        name = arguments['name']
+    except:
+        name = ""
+    
+    try:
+        withSymbol = eval(arguments['symbol'])
+    except:
+        withSymbol = True
+
+    if 0 == len(name) and withSymbol is False:
+        logger.warning(f"No link name or symbol set for {role}")
+    
+    node = nodes.raw(text=download_html(link=link, name=name, symbol=withSymbol), format='html')
+    return [node], []
+
+
 def headerLink(ref: str) -> str:
     headerLinkHTML = f'<a class="headerlink" href="#{ref}" title="Link to this heading">¶</a>'
     return headerLinkHTML
@@ -103,7 +137,8 @@ class PDF_Title_Directive(SphinxDirective):
         "alt": directives.unchanged,
         "hidepdf": directives.flag,
         "ratio": directives.percentage,
-        "width": directives.percentage
+        "width": directives.percentage,
+        "addtoheader": directives.flag
     }
 
     def run(self) -> list[nodes.Node]:
@@ -111,15 +146,8 @@ class PDF_Title_Directive(SphinxDirective):
         path = self.arguments[0]
         pdf_name = Path(path).stem
 
-        try:
-            name = self.options["name"]
-        except:
-            name = pdf_name
-
-        try: 
-            header = self.options["header"]
-        except:
-            header = 1
+        name = self.options.get("name", pdf_name)
+        header = self.options.get("header", 1)
 
         try: 
             self.options['hidedownload']
@@ -133,15 +161,13 @@ class PDF_Title_Directive(SphinxDirective):
         except:
             newTabCode = new_tab_link_html(path)
         
-
         headerId = name.replace(" ", "-")
-
-        htmlHeaderCode = f'<h{header} id="{headerId}">{name}{downloadCode}{newTabCode}{headerLink(headerId)}</h{header}>'
-
-        try: 
-            alt = self.options["alt"]
-        except:
-            alt = 'Cannot display PDF, please download it with the link above.'
+        if "addtoheader" in  self.options:
+            htmlHeaderCode = f'<h{header} id="{headerId}">{name}{downloadCode}{newTabCode}{headerLink(headerId)}</h{header}>'
+        else:
+            htmlHeaderCode = ""
+        print(htmlHeaderCode)
+        alt = self.options.get("alt", 'Cannot display PDF, please download it with the link above.')
 
         try: 
             self.options["hidepdf"]
@@ -163,10 +189,16 @@ class PDF_Title_Directive(SphinxDirective):
 
         return [nodes.header(), paragraph_node]
 
+def inlineHeader(role, rawsource, text, lineno, self):
+    node = nodes.raw(text='<style display:inline;></style>', format='html')
+    print(f"\ninline header node is: {node}\n")
+    return [node], []
 
 def setup(app: Sphinx) -> ExtensionMetadata:
     app.add_directive('embedpdf', PDF_Title_Directive)
+    app.add_role('inlineHeader', inlineHeader)
     app.add_role('ntLink', link_newTab)
+    app.add_role('downloadPDF', download_pdf)
     app.add_css_file("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@40,200,0,0")
     app.add_css_file("embedpdf.css")
     app.add_js_file("pdfViewer.js")

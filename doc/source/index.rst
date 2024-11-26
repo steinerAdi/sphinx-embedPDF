@@ -34,5 +34,5 @@ Further features are in coming.
    :caption: Content
 
    gettingStarted.rst
-   example.rst
+   exampleCollection/index.rst
    faq.rst
