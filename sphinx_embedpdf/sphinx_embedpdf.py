@@ -61,7 +61,7 @@ def download_html(link: str, name="", symbol=True) -> str:
     return html_text
 
 
-def embed_pdf_html(link: str, ratio: float, width: int, alt: str):
+def embed_pdf_html(link: str, ratio: float, width: int, alt: str, id: str):
     styleSettings = ""
     if 0 != width:
         styleSettings += f"width:{width}%; "
@@ -70,12 +70,13 @@ def embed_pdf_html(link: str, ratio: float, width: int, alt: str):
 
     embed_script = html_command(
         command="script",
-        text=f'pdfViewer = document.getElementById("showPDF"); pdfViewer.data = PDF_VIEWER.getSrcName("{link}");',
+        text=f'pdfViewer = document.getElementById("{id}"); pdfViewer.data = PDF_VIEWER.getSrcName("{link}");',
     )
-    alternate_text = html_command(command="p", text=f'<div align="left">{alt}')
+    alternate_text = html_command(command="div", command_features='align="left"', text=alt)
+    alternate_text = html_command(command="p", text=alternate_text)
     embed_html = html_command(
         command="object",
-        command_features=f'id = "showPDF" type="application/pdf" class="embedpdf" style="{styleSettings}"',
+        command_features=f'id = "{id}" type="application/pdf" class="embedpdf" style="{styleSettings}"',
         text=alternate_text,
     )
     total_html = html_command(
@@ -184,7 +185,7 @@ class PDF_Title_Directive(SphinxDirective):
         except:
             newTabCode = new_tab_link_html(path)
 
-        headerId = name.replace(" ", "-")
+        headerId =  name.lower().replace(" ", "-")
         if "addtoheader" in self.options:
             htmlHeaderCode = f'<h{header} id="{headerId}">{name}{downloadCode}{newTabCode}{headerLink(headerId)}</h{header}>'
         else:
@@ -208,7 +209,7 @@ class PDF_Title_Directive(SphinxDirective):
             except:
                 width = 0
 
-            pdfCode = embed_pdf_html(path, ratio, width, alt)
+            pdfCode = embed_pdf_html(path, ratio, width, alt, headerId+'-pdf')
 
         paragraph_node = nodes.raw(text=htmlHeaderCode + pdfCode, format="html")
 

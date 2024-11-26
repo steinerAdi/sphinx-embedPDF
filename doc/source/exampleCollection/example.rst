@@ -1,10 +1,6 @@
 Example PDF Page
 ----------------
 
-:downloadPDF:`src:/_static/sample.pdf` :ntLink:`src:/_static/sample.pdf, symbol:1`
-
-Text
-
 .. embedpdf:: /_static/sample.pdf
    :name: Sample 1
    :alt: Cannot display PDF, please download it with the link above.
