@@ -18,111 +18,142 @@ __version__ = "0.0.1"
 
 logger = logging.getLogger(__name__)
 
-def html_command(command: str, command_features="", text="")->str:
+
+def html_command(command: str, command_features="", text="") -> str:
     return f"<{command} {command_features}>{text}</{command}>"
 
-def new_tab_link_html(link: str, name = "", symbol = True) -> str:
+
+def new_tab_link_html(link: str, name="", symbol=True) -> str:
     if symbol:
-        symbolText = html_command(command='span', command_features='class="material-symbols-outlined" title="Open in new tab"', text="open_in_new") 
+        symbolText = html_command(
+            command="span",
+            command_features='class="material-symbols-outlined" title="Open in new tab"',
+            text="open_in_new",
+        )
     else:
         symbolText = ""
 
-    html_text = html_command(command='a', command_features=f'href="{link}" target="_blank" rel="noopener noreferrer"', text=f'{name}{symbolText}')
-    html_text = html_command(command='object',text=html_text)
+    html_text = html_command(
+        command="a",
+        command_features=f'href="{link}" target="_blank" rel="noopener noreferrer"',
+        text=f"{name}{symbolText}",
+    )
+    html_text = html_command(command="object", text=html_text)
     return html_text
 
-def download_html(link: str, name = "", symbol = True) -> str:
+
+def download_html(link: str, name="", symbol=True) -> str:
     if symbol:
-        symbolText = html_command(command='span', command_features='class="material-symbols-outlined" title="Download"', text='download') 
+        symbolText = html_command(
+            command="span",
+            command_features='class="material-symbols-outlined" title="Download"',
+            text="download",
+        )
     else:
-        symbolText = ''
-    
-    html_text = html_command(command='a', command_features=f'class="reference download internal" download="" href="{link}"', text=f'{name}{symbolText}')
-    html_text = html_command(command='object', text=html_text)
+        symbolText = ""
+
+    html_text = html_command(
+        command="a",
+        command_features=f'class="reference download internal" download="" href="{link}"',
+        text=f"{name}{symbolText}",
+    )
+    html_text = html_command(command="object", text=html_text)
     return html_text
+
 
 def embed_pdf_html(link: str, ratio: float, width: int, alt: str):
     styleSettings = ""
     if 0 != width:
-        styleSettings += f'width:{width}%; '
+        styleSettings += f"width:{width}%; "
     if 0 != ratio:
-        styleSettings += f'aspect-ratio:{ratio};'
+        styleSettings += f"aspect-ratio:{ratio};"
 
-    embed_script = html_command(command="script", text=f'pdfViewer = document.getElementById("showPDF"); pdfViewer.data = PDF_VIEWER.getSrcName("{link}");')
-    alternate_text = html_command(command='p', text=f'<div align="left">{alt}')
-    embed_html = html_command(command="object", command_features=f'id = "showPDF" type="application/pdf" class="embedpdf" style="{styleSettings}"', text=alternate_text)
-    total_html = html_command(command='div', command_features='align="center"', text=embed_html+embed_script)
+    embed_script = html_command(
+        command="script",
+        text=f'pdfViewer = document.getElementById("showPDF"); pdfViewer.data = PDF_VIEWER.getSrcName("{link}");',
+    )
+    alternate_text = html_command(command="p", text=f'<div align="left">{alt}')
+    embed_html = html_command(
+        command="object",
+        command_features=f'id = "showPDF" type="application/pdf" class="embedpdf" style="{styleSettings}"',
+        text=alternate_text,
+    )
+    total_html = html_command(
+        command="div", command_features='align="center"', text=embed_html + embed_script
+    )
     return total_html
-    
+
+
 def link_newTab(role, rawsource, text, lineno, self):
-    text = text.replace(' ', '')
+    text = text.replace(" ", "")
     arguments = {}
     # read specs
-    for component in text.split(','):
-         arguments[component.split(':')[0]] = component.split(':', 1)[1]
-        
-    try:
-        link = arguments['src']
-    except:
-        return
-    
-    try:
-        name = arguments['name']
-    except:
-        name = ""
-    
-    try:
-        withSymbol = eval(arguments['symbol'])
-    except:
-        withSymbol = True
+    for component in text.split(","):
+        arguments[component.split(":")[0]] = component.split(":", 1)[1]
+
+    link = arguments.get("src", None)
+
+    if link is None:
+        logger.error(f"No src:link set for {rawsource} at line {lineno}")
+        return [nodes.raw()], []
+
+    name = arguments.get("name", "")
+    withSymbol = bool(int(arguments.get("symbol", 1)))
 
     if 0 == len(name) and withSymbol is False:
-        logger.warning(f"No link name or symbol set for {role}")
-    
-    node = nodes.raw(text=new_tab_link_html(link=link, name=name, symbol=withSymbol), format='html')
+        logger.warning(f"No link name or symbol set for {rawsource} at line {lineno}")
+
+    node = nodes.raw(
+        text=new_tab_link_html(link=link, name=name, symbol=withSymbol), format="html"
+    )
     return [node], []
 
 
 def download_pdf(role, rawsource, text, lineno, self):
 
-    text = text.replace(' ', '')
+    text = text.replace(" ", "")
     arguments = {}
     # read specs
-    for component in text.split(','):
-         arguments[component.split(':')[0]] = component.split(':', 1)[1]
-        
-    try:
-        link = arguments['src']
-    except:
+    for component in text.split(","):
+        arguments[component.split(":")[0]] = component.split(":", 1)[1]
+
+    link = arguments.get("src", None)
+
+    if link is None:
+        logger.error(f"No src:link set for {rawsource} at line {lineno}")
         return
-    
-    try:
-        name = arguments['name']
-    except:
-        name = ""
-    
-    try:
-        withSymbol = eval(arguments['symbol'])
-    except:
-        withSymbol = True
+
+    link = arguments.get("src", None)
+
+    if link is None:
+        logger.warning(f"No src link set for {rawsource} at line {lineno}")
+        return
+
+    name = arguments.get("name", "")
+    withSymbol = bool(int(arguments.get("symbol", 1)))
 
     if 0 == len(name) and withSymbol is False:
-        logger.warning(f"No link name or symbol set for {role}")
-    
-    node = nodes.raw(text=download_html(link=link, name=name, symbol=withSymbol), format='html')
+        logger.warning(f"No link name or symbol set for {rawsource} at line {lineno}")
+
+    node = nodes.raw(
+        text=download_html(link=link, name=name, symbol=withSymbol), format="html"
+    )
     return [node], []
 
 
 def headerLink(ref: str) -> str:
-    headerLinkHTML = f'<a class="headerlink" href="#{ref}" title="Link to this heading">¶</a>'
+    headerLinkHTML = (
+        f'<a class="headerlink" href="#{ref}" title="Link to this heading">¶</a>'
+    )
     return headerLinkHTML
+
 
 class PDF_Title_Directive(SphinxDirective):
 
     required_arguments = 1
 
     option_spec = {
-        "name": directives.unchanged ,
+        "name": directives.unchanged,
         "hidedownload": directives.flag,
         "hidenewtab": directives.flag,
         "header": directives.nonnegative_int,
@@ -130,7 +161,7 @@ class PDF_Title_Directive(SphinxDirective):
         "hidepdf": directives.flag,
         "ratio": directives.percentage,
         "width": directives.percentage,
-        "addtoheader": directives.flag
+        "addtoheader": directives.flag,
     }
 
     def run(self) -> list[nodes.Node]:
@@ -141,9 +172,9 @@ class PDF_Title_Directive(SphinxDirective):
         name = self.options.get("name", pdf_name)
         header = self.options.get("header", 1)
 
-        try: 
-            self.options['hidedownload']
-            downloadCode = ''
+        try:
+            self.options["hidedownload"]
+            downloadCode = ""
         except:
             downloadCode = download_html(link=path)
 
@@ -152,53 +183,51 @@ class PDF_Title_Directive(SphinxDirective):
             newTabCode = ""
         except:
             newTabCode = new_tab_link_html(path)
-        
+
         headerId = name.replace(" ", "-")
-        if "addtoheader" in  self.options:
+        if "addtoheader" in self.options:
             htmlHeaderCode = f'<h{header} id="{headerId}">{name}{downloadCode}{newTabCode}{headerLink(headerId)}</h{header}>'
         else:
             htmlHeaderCode = ""
-        print(htmlHeaderCode)
-        alt = self.options.get("alt", 'Cannot display PDF, please download it with the link above.')
 
-        try: 
+        alt = self.options.get(
+            "alt", "Cannot display PDF, please download it with the link above."
+        )
+
+        try:
             self.options["hidepdf"]
             pdfCode = ""
         except:
             try:
-                ratio = self.options["ratio"]/100
+                ratio = self.options["ratio"] / 100
             except:
                 ratio = 0
-            
-            try: 
+
+            try:
                 width = self.options["width"]
             except:
                 width = 0
 
             pdfCode = embed_pdf_html(path, ratio, width, alt)
 
-        paragraph_node = nodes.raw(text=htmlHeaderCode+pdfCode, format='html')
+        paragraph_node = nodes.raw(text=htmlHeaderCode + pdfCode, format="html")
 
         return [nodes.header(), paragraph_node]
 
-def inlineHeader(role, rawsource, text, lineno, self):
-    node = nodes.raw(text='<style display:inline;></style>', format='html')
-    print(f"\ninline header node is: {node}\n")
-    return [node], []
 
 def setup(app: Sphinx) -> ExtensionMetadata:
-    app.add_directive('embedpdf', PDF_Title_Directive)
-    app.add_role('inlineHeader', inlineHeader)
-    app.add_role('ntLink', link_newTab)
-    app.add_role('downloadPDF', download_pdf)
-    app.add_css_file("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@40,200,0,0")
+    app.add_directive("embedpdf", PDF_Title_Directive)
+    app.add_role("ntLink", link_newTab)
+    app.add_role("downloadPDF", download_pdf)
+    app.add_css_file(
+        "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@40,200,0,0"
+    )
     app.add_css_file("embedpdf.css")
     app.add_js_file("pdfViewer.js")
     app.config.html_static_path.append(str(Path(__file__).parent.joinpath("resources")))
-    
-    return {
-        'version': __version__,
-        'parallel_read_safe': True,
-        'parallel_write_safe': True,
-    }
 
+    return {
+        "version": __version__,
+        "parallel_read_safe": True,
+        "parallel_write_safe": True,
+    }

@@ -1,6 +1,7 @@
-Example PDF Page :inlineHeader:`B`
-----------------------------------
-:downloadPDF:`src:/_static/sample.pdf` :ntLink:`src:/_static/sample.pdf`
+Example PDF Page
+----------------
+
+:downloadPDF:`src:/_static/sample.pdf` :ntLink:`src:/_static/sample.pdf, symbol:1`
 
 Text
 
@@ -10,3 +11,4 @@ Text
    :width: 95
    :ratio: 75
    :addToHeader:
+   :header: 2
