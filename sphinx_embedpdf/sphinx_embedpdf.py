@@ -72,6 +72,8 @@ def embed_pdf_html(link: str, ratio: float, width: int, alt: str, id: str):
         command="script",
         text=f'pdfViewer = document.getElementById("{id}"); pdfViewer.data = PDF_VIEWER.getSrcName("{link}");',
     )
+    embed_script = f'<iframe class="embedpdf" title="Embedded PDF" src="/_static/pdfjs/web/viewer.html?file={link}#page=2&amp;pagemode=none" allow="fullscreen" style="border: medium; width: 100%; height: 100%;"></iframe>'
+
     print(embed_script)
     alternate_text = html_command(command="div", command_features='align="left"', text=alt)
     alternate_text = html_command(command="p", text=alternate_text)
