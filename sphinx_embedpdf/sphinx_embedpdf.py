@@ -68,11 +68,16 @@ def embed_pdf_html(link: str, ratio: float, width: int, alt: str, id: str):
     if 0 != ratio:
         styleSettings += f"aspect-ratio:{ratio};"
     embed_script =  html_command(command='script', command_features='src="/_static/pdfViewer.js"')
-    embed_script += html_command(
-        command="script",
-        text=f'pdfViewer = document.getElementById("{id}"); pdfViewer.data = PDF_VIEWER.getSrcName("{link}");',
-    )
-    embed_script = f'<iframe class="embedpdf" title="Embedded PDF" src="/_static/pdfjs/web/viewer.html?file={link}#page=;pagemode=none" allow="fullscreen" style="{styleSettings}"></iframe>'
+    # embed_script += html_command(
+    #     command="script",
+    #     text=f'pdfViewer = document.getElementById("{id}"); pdfViewer.data = PDF_VIEWER.getSrcName("{link}");',
+    # )
+
+
+
+
+
+    embed_script += f'<iframe class="embedpdf" title="Embedded PDF" src="/_static/pdfjs/web/viewer.html?file={link}#pagemode=none&page=2" allow="fullscreen" style="{styleSettings}"></iframe>\n'
 
     print(embed_script)
     alternate_text = html_command(command="div", command_features='align="left"', text=alt)
