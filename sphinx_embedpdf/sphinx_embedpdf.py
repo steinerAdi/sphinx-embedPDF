@@ -30,7 +30,9 @@ class Global_Configs():
     download_symbol = Global_Config_Type("embedpdf_download_symbol", "download")
     newtab_symbol = Global_Config_Type("embedpdf_newtab_symbol", "open_in_new")
     icon_class = Global_Config_Type("embedpdf_icon_class", "material-symbols-outlined")
-
+    zoom = Global_Config_Type("embedpdf_zoom", "auto")
+    pagemode =  Global_Config_Type("embedpdf_pagemode", "none")
+    alt =Global_Config_Type("embedpdf_alt", "Cannot display PDF, please download it with the link above.")
 
 global_configs = Global_Configs()
 
@@ -203,7 +205,6 @@ class PDF_Title_Directive(SphinxDirective):
             else:
                 downloadCode = download_html(link=path)
 
-
             if "hidenewtab" in self.options:
                 newTabCode = ""
             else:
@@ -213,7 +214,7 @@ class PDF_Title_Directive(SphinxDirective):
 
 
         alt = self.options.get(
-            "alt", "Cannot display PDF, please download it with the link above."
+            "alt", global_configs.alt.value
         )
 
         if "hidepdf" in self.options:
@@ -224,13 +225,13 @@ class PDF_Title_Directive(SphinxDirective):
 
             width = self.options.get("width", 0) 
 
-            pagemode = self.options.get("pagemode", "none")
+            pagemode = self.options.get("pagemode", global_configs.pagemode.value)
 
             if pagemode not in self.accepted_pagemode_values:
                 logger.warning(f'pagemode: {pagemode} not allowed.\n Allowed pagemode arguments: {self.accepted_pagemode_values}')
                 pagemode = "none"
             
-            zoom = self.options.get("zoom", "auto")
+            zoom = self.options.get("zoom", global_configs.zoom.value)
 
             additional_class = self.options.get("class", "")
 
@@ -244,6 +245,9 @@ def add_embed_pdf_lib(app: Sphinx, env: BuildEnvironment, docnames):
     global_configs.download_symbol.value = app.config.embedpdf_download_symbol
     global_configs.newtab_symbol.value = app.config.embedpdf_newtab_symbol
     global_configs.icon_class.value = app.config.embedpdf_icon_class
+    global_configs.zoom.value = app.config.embedpdf_zoom
+    global_configs.pagemode.value = app.config.embedpdf_pagemode
+    global_configs.alt.value = app.config.embedpdf_alt
 
 def setup(app: Sphinx) -> ExtensionMetadata:
     app.add_directive("embedpdf", PDF_Title_Directive)
@@ -257,6 +261,9 @@ def setup(app: Sphinx) -> ExtensionMetadata:
     app.add_config_value(name=global_configs.download_symbol.name, default=global_configs.download_symbol.default_value, rebuild='html', description="glog")
     app.add_config_value(global_configs.newtab_symbol.name, global_configs.newtab_symbol.default_value, 'html')
     app.add_config_value(global_configs.icon_class.name, global_configs.icon_class.default_value, 'html')
+    app.add_config_value(global_configs.zoom.name, global_configs.zoom.default_value, 'html')
+    app.add_config_value(global_configs.pagemode.name, global_configs.pagemode.default_value, 'html')
+    app.add_config_value(global_configs.alt.name, global_configs.alt.default_value, 'html')
     app.connect('env-before-read-docs', add_embed_pdf_lib)
     return {
         "version": __version__,
