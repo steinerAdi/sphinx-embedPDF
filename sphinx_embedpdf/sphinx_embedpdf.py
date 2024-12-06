@@ -20,7 +20,12 @@ logger = logging.getLogger(__name__)
 
 
 def html_command(command: str, command_features="", text="") -> str:
-    return f"<{command} {command_features}>{text}</{command}>"
+    if 0 != len(command_features):
+        tag_features = " "+command_features
+    else:
+        tag_features = ""
+        
+    return f"<{command}{tag_features}>{text}</{command}>"
 
 
 def new_tab_link_html(link: str, name="", symbol=True) -> str:
@@ -35,7 +40,8 @@ def new_tab_link_html(link: str, name="", symbol=True) -> str:
 
     html_text = html_command(
         command='a',
-        command_features=f'href="{link}" target="_blank" rel="noopener noreferrer"',
+        command_features=f'href="{
+            link}" target="_blank" rel="noopener noreferrer"',
         text=f"{name}{symbolText}",
     )
     html_text = html_command(command="object", text=html_text)
@@ -96,7 +102,8 @@ def link_newTab(role, rawsource, text, lineno, self):
     if 0 == len(name) and withSymbol is False:
         logger.warning(f"No link name or symbol set for {rawsource} at line {lineno}")
 
-    node = nodes.raw(text=new_tab_link_html(link=link, name=name, symbol=withSymbol), format="html")
+    node = nodes.raw(text=new_tab_link_html(
+        link=link, name=name, symbol=withSymbol), format="html")
     return [node], []
 
 
@@ -124,8 +131,7 @@ def download_pdf(role, rawsource, text, lineno, self):
     withSymbol = bool(int(arguments.get("symbol", 1)))
 
     if 0 == len(name) and withSymbol is False:
-        logger.warning(f"No link name or symbol set for {
-                       rawsource} at line {lineno}")
+        logger.warning(f"No link name or symbol set for {rawsource} at line {lineno}")
 
     node = nodes.raw(
         text=download_html(link=link, name=name, symbol=withSymbol), format="html"
@@ -134,9 +140,10 @@ def download_pdf(role, rawsource, text, lineno, self):
 
 
 def headerLink(ref: str) -> str:
-    headerLinkHTML = (
-        f'<a class="headerlink" href="#{
-            ref}" title="Link to this heading">¶</a>'
+    headerLinkHTML = html_command( 
+        command='a', 
+        command_features=f'class="headerlink" href="#{ref}" title="Link to this heading"',
+        text='¶'
     )
     return headerLinkHTML
 
@@ -146,6 +153,7 @@ class PDF_Title_Directive(SphinxDirective):
     required_arguments = 1
 
     option_spec = {
+        "hideheader": directives.flag,
         "name": directives.unchanged,
         "hidedownload": directives.flag,
         "hidenewtab": directives.flag,
@@ -154,7 +162,6 @@ class PDF_Title_Directive(SphinxDirective):
         "hidepdf": directives.flag,
         "ratio": directives.percentage,
         "width": directives.percentage,
-        "addtoheader": directives.flag,
     }
 
     def run(self) -> list[nodes.Node]:
@@ -163,49 +170,42 @@ class PDF_Title_Directive(SphinxDirective):
         pdf_name = Path(path).stem
 
         name = self.options.get("name", pdf_name)
-        header = self.options.get("headerdepth", 1)
-
-        try:
-            self.options["hidedownload"]
-            downloadCode = ""
-        except:
-            downloadCode = download_html(link=path)
-
-        try:
-            self.options["hidenewtab"]
-            newTabCode = ""
-        except:
-            newTabCode = new_tab_link_html(path)
-
         headerId = name.lower().replace(" ", "-")
-        if "addtoheader" in self.options:
-            htmlHeaderCode = f'<h{header} id="{headerId}">{name}{
-                downloadCode}{newTabCode}{headerLink(headerId)}</h{header}>'
-        else:
+
+        if "hideheader" in self.options:
             htmlHeaderCode = ""
+        else:
+            header = self.options.get("headerdepth", 1)
+
+            if "hidedownload" in self.options:
+                downloadCode = ""
+            else:
+                downloadCode = download_html(link=path)
+
+
+            if "hidenewtab" in self.options:
+                newTabCode = ""
+            else:
+                newTabCode = new_tab_link_html(path)
+
+            htmlHeaderCode = html_command(f'h{header}', command_features=f'id="{headerId}"', text=f'{name}{downloadCode}{newTabCode}{headerLink(headerId)}')
+
 
         alt = self.options.get(
             "alt", "Cannot display PDF, please download it with the link above."
         )
 
-        try:
-            self.options["hidepdf"]
+        if "hidepdf" in self.options:
             pdfCode = ""
-        except:
-            try:
-                ratio = self.options["ratio"] / 100
-            except:
-                ratio = 0
+        else:
 
-            try:
-                width = self.options["width"]
-            except:
-                width = 0
+            ratio = self.options.get("ratio", 0) / 100
+
+            width = self.options.get("width", 0) 
 
             pdfCode = embed_pdf_html(path, ratio, width, alt, headerId+'-pdf')
 
-        paragraph_node = nodes.raw(
-            text=htmlHeaderCode + pdfCode, format="html")
+        paragraph_node = nodes.raw(text=htmlHeaderCode + pdfCode, format="html")
 
         return [nodes.header(), paragraph_node]
 

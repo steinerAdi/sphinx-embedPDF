@@ -18,6 +18,7 @@ PDF Page can be used to set a title including a download icon and new tab icon
       :name: Embed PDF Sample
       :width: 95
       :ratio: 75
+      :hideheader:
 
 Which results in:
 
@@ -26,6 +27,7 @@ Which results in:
    :name: Embed PDF Sample
    :width: 95
    :ratio: 75
+   :hideheader:
 
 Further features are in coming.
 
