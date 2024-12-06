@@ -160,7 +160,8 @@ class PDF_Title_Directive(SphinxDirective):
         "ratio": directives.percentage,
         "width": directives.percentage,
         "pagemode": directives.unchanged,
-        "zoom": directives.unchanged
+        "zoom": directives.unchanged,
+        "class": directives.unchanged
     }
 
     accepted_pagemode_values = {
@@ -214,7 +215,9 @@ class PDF_Title_Directive(SphinxDirective):
             
             zoom = self.options.get("zoom", "auto")
 
-            pdfCode = embed_pdf_html(path, ratio, width, alt, headerId+'-pdf', pageMode=pagemode, zoom=zoom)
+            additional_class = self.options.get("class", "")
+
+            pdfCode = embed_pdf_html(path, ratio, width, alt, headerId+'-pdf', pageMode=pagemode, addClass=additional_class, zoom=zoom)
 
         paragraph_node = nodes.raw(text=htmlHeaderCode + pdfCode, format="html")
 
