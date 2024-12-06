@@ -65,7 +65,7 @@ def download_html(link: str, name="", symbol=True) -> str:
     return html_text
 
 
-def embed_pdf_html(link: str, ratio: float, width: int, alt: str, id: str, pageMode="none", addClass=""):
+def embed_pdf_html(link: str, ratio: float, width: int, alt: str, id: str, pageMode="none", addClass="", zoom = "auto"):
     styleSettings = ""
     if 0 != width:
         styleSettings += f"width:{width}%; "
@@ -75,7 +75,7 @@ def embed_pdf_html(link: str, ratio: float, width: int, alt: str, id: str, pageM
     pdf_div = html_command('div', command_features=f'id="{id}" align="center"', text=alt) + '\n'
     pdf_script = html_command(command='script', command_features='src="/_static/pdfViewer.js"') + '\n'
 
-    add_PDF_script = html_command('script', text=f'addPDFTag("{id}", "{link}", "{styleSettings}", "{addClass}", "{pageMode}")') + '\n'
+    add_PDF_script = html_command('script', text=f'addPDFTag("{id}", "{link}", "{styleSettings}", "{addClass}", "{pageMode}", "{zoom}")') + '\n'
 
     return pdf_div + pdf_script + add_PDF_script
 
@@ -159,7 +159,8 @@ class PDF_Title_Directive(SphinxDirective):
         "hidepdf": directives.flag,
         "ratio": directives.percentage,
         "width": directives.percentage,
-        "pagemode": directives.unchanged
+        "pagemode": directives.unchanged,
+        "zoom": directives.unchanged
     }
 
     accepted_pagemode_values = {
@@ -210,8 +211,10 @@ class PDF_Title_Directive(SphinxDirective):
             if pagemode not in self.accepted_pagemode_values:
                 logger.warning(f'pagemode: {pagemode} not allowed.\n Allowed pagemode arguments: {self.accepted_pagemode_values}')
                 pagemode = "none"
+            
+            zoom = self.options.get("zoom", "auto")
 
-            pdfCode = embed_pdf_html(path, ratio, width, alt, headerId+'-pdf', pageMode=pagemode)
+            pdfCode = embed_pdf_html(path, ratio, width, alt, headerId+'-pdf', pageMode=pagemode, zoom=zoom)
 
         paragraph_node = nodes.raw(text=htmlHeaderCode + pdfCode, format="html")
 

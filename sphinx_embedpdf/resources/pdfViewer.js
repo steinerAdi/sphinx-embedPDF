@@ -17,7 +17,7 @@ function getPagefromParams() {
 }
 
 
-function addPDFTag(id, link, styleSettings = "", additionalClass = "", pageMode = "none") {
+function addPDFTag(id, link, styleSettings = "", additionalClass = "", pageMode = "none", zoom = "auto") {
   var element = document.getElementById(id);
   var page = getPagefromParams();
   pageString = ""
@@ -25,5 +25,7 @@ function addPDFTag(id, link, styleSettings = "", additionalClass = "", pageMode 
     pageString = `&page=${page}`
   }
 
-  element.innerHTML = generateHTML(tag = "iframe", tagFeatures = `class="embedpdf ${additionalClass}" src="/_static/pdfjs/web/viewer.html?file=${link}#pagemode=${pageMode}${pageString}" allow="fullscreen" style="${styleSettings}"`);
+  zoomString = `&zoom=${zoom}`
+
+  element.innerHTML = generateHTML(tag = "iframe", tagFeatures = `class="embedpdf ${additionalClass}" src="/_static/pdfjs/web/viewer.html?file=${link}#pagemode=${pageMode}${pageString}${zoomString}" allow="fullscreen" style="${styleSettings}"`);
 }
