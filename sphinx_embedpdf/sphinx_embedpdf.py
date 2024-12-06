@@ -12,11 +12,28 @@ from sphinx.application import Sphinx
 from sphinx.util.docutils import SphinxDirective, SphinxRole
 from sphinx.util.typing import ExtensionMetadata
 from sphinx.util import logging
+from sphinx.environment import BuildEnvironment
 
 __author__ = "Adrian STEINER"
 __version__ = "0.0.1"
 
 logger = logging.getLogger(__name__)
+
+# global config variables:
+class Global_Config_Type():
+    def __init__(self, variable_name: str, default_value):
+        self.name = variable_name
+        self.default_value = default_value
+        self.value = None
+
+class Global_Configs():
+    download_symbol = Global_Config_Type("embedpdf_download_symbol", "download")
+    newtab_symbol = Global_Config_Type("embedpdf_newtab_symbol", "open_in_new")
+    icon_class = Global_Config_Type("embedpdf_icon_class", "material-symbols-outlined")
+
+
+global_configs = Global_Configs()
+
 
 def html_command(command: str, command_features="", text="") -> str:
     if 0 != len(command_features):
@@ -31,8 +48,8 @@ def new_tab_link_html(link: str, name="", symbol=True) -> str:
     if symbol:
         symbolText = html_command(
             command="span",
-            command_features='class="material-symbols-outlined" title="Open in new tab"',
-            text="open_in_new",
+            command_features=f'class="{global_configs.icon_class.value}" title="Open in new tab"',
+            text=global_configs.newtab_symbol.value
         )
     else:
         symbolText = ""
@@ -50,8 +67,8 @@ def download_html(link: str, name="", symbol=True) -> str:
     if symbol:
         symbolText = html_command(
             command="span",
-            command_features='class="material-symbols-outlined" title="Download"',
-            text="download",
+            command_features=f'class="{global_configs.icon_class.value}" title="Download"',
+            text= global_configs.download_symbol.value
         )
     else:
         symbolText = ""
@@ -98,7 +115,7 @@ def link_newTab(role, rawsource, text, lineno, self):
 
     if 0 == len(name) and withSymbol is False:
         logger.warning(f"No link name or symbol set for {rawsource} at line {lineno}")
-
+    
     node = nodes.raw(text=new_tab_link_html(
         link=link, name=name, symbol=withSymbol), format="html")
     return [node], []
@@ -223,6 +240,10 @@ class PDF_Title_Directive(SphinxDirective):
 
         return [nodes.header(), paragraph_node]
 
+def add_embed_pdf_lib(app: Sphinx, env: BuildEnvironment, docnames):
+    global_configs.download_symbol.value = app.config.embedpdf_download_symbol
+    global_configs.newtab_symbol.value = app.config.embedpdf_newtab_symbol
+    global_configs.icon_class.value = app.config.embedpdf_icon_class
 
 def setup(app: Sphinx) -> ExtensionMetadata:
     app.add_directive("embedpdf", PDF_Title_Directive)
@@ -232,9 +253,11 @@ def setup(app: Sphinx) -> ExtensionMetadata:
         "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@40,200,0,0"
     )
     app.add_css_file("embedpdf.css")
-    app.config.html_static_path.append(
-        str(Path(__file__).parent.joinpath("resources")))
-
+    app.config.html_static_path.append(str(Path(__file__).parent.joinpath("resources")))
+    app.add_config_value(name=global_configs.download_symbol.name, default=global_configs.download_symbol.default_value, rebuild='html', description="glog")
+    app.add_config_value(global_configs.newtab_symbol.name, global_configs.newtab_symbol.default_value, 'html')
+    app.add_config_value(global_configs.icon_class.name, global_configs.icon_class.default_value, 'html')
+    app.connect('env-before-read-docs', add_embed_pdf_lib)
     return {
         "version": __version__,
         "parallel_read_safe": True,
