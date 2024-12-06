@@ -18,7 +18,6 @@ __version__ = "0.0.1"
 
 logger = logging.getLogger(__name__)
 
-
 def html_command(command: str, command_features="", text="") -> str:
     if 0 != len(command_features):
         tag_features = " "+command_features
@@ -40,8 +39,7 @@ def new_tab_link_html(link: str, name="", symbol=True) -> str:
 
     html_text = html_command(
         command='a',
-        command_features=f'href="{
-            link}" target="_blank" rel="noopener noreferrer"',
+        command_features=f'href="{link}" target="_blank" rel="noopener noreferrer"',
         text=f"{name}{symbolText}",
     )
     html_text = html_command(command="object", text=html_text)
@@ -60,8 +58,7 @@ def download_html(link: str, name="", symbol=True) -> str:
 
     html_text = html_command(
         command="a",
-        command_features=f'class="reference download internal" download="" href="{
-            link}"',
+        command_features=f'class="reference download internal" download="" href="{link}"',
         text=f"{name}{symbolText}",
     )
     html_text = html_command(command="object", text=html_text)
@@ -162,6 +159,11 @@ class PDF_Title_Directive(SphinxDirective):
         "hidepdf": directives.flag,
         "ratio": directives.percentage,
         "width": directives.percentage,
+        "pagemode": directives.unchanged
+    }
+
+    accepted_pagemode_values = {
+        'none', 'thumbs', 'bookmarks', 'attachments'
     }
 
     def run(self) -> list[nodes.Node]:
@@ -203,7 +205,13 @@ class PDF_Title_Directive(SphinxDirective):
 
             width = self.options.get("width", 0) 
 
-            pdfCode = embed_pdf_html(path, ratio, width, alt, headerId+'-pdf')
+            pagemode = self.options.get("pagemode", "none")
+
+            if pagemode not in self.accepted_pagemode_values:
+                logger.warning(f'pagemode: {pagemode} not allowed.\n Allowed pagemode arguments: {self.accepted_pagemode_values}')
+                pagemode = "none"
+
+            pdfCode = embed_pdf_html(path, ratio, width, alt, headerId+'-pdf', pageMode=pagemode)
 
         paragraph_node = nodes.raw(text=htmlHeaderCode + pdfCode, format="html")
 
