@@ -34,9 +34,8 @@ def new_tab_link_html(link: str, name="", symbol=True) -> str:
         symbolText = ""
 
     html_text = html_command(
-        command="a",
-        command_features=f'href="{
-            link}" target="_blank" rel="noopener noreferrer"',
+        command='a',
+        command_features=f'href="{link}" target="_blank" rel="noopener noreferrer"',
         text=f"{name}{symbolText}",
     )
     html_text = html_command(command="object", text=html_text)
@@ -63,37 +62,18 @@ def download_html(link: str, name="", symbol=True) -> str:
     return html_text
 
 
-def embed_pdf_html(link: str, ratio: float, width: int, alt: str, id: str):
+def embed_pdf_html(link: str, ratio: float, width: int, alt: str, id: str, pageMode="none", addClass=""):
     styleSettings = ""
     if 0 != width:
         styleSettings += f"width:{width}%; "
     if 0 != ratio:
         styleSettings += f"aspect-ratio:{ratio};"
 
-    pdf_div = html_command('div', command_features=f'id="{id}"', text=alt) + '\n'
-    pdf_script = html_command(
-        command='script', command_features='src="/_static/pdfViewer.js"') + '\n'
-    # embed_script += html_command(
-    #     command="script",
-    #     text=f'pdfViewer = document.getElementById("{id}"); pdfViewer.data = PDF_VIEWER.getSrcName("{link}");',
-    # )
+    pdf_div = html_command('div', command_features=f'id="{id}" align="center"', text=alt) + '\n'
+    pdf_script = html_command(command='script', command_features='src="/_static/pdfViewer.js"') + '\n'
 
-    add_PDF_script = html_command('script', text=f'addPDFTag("{id}", "{link}", "{styleSettings}", "", "none")') + '\n'
+    add_PDF_script = html_command('script', text=f'addPDFTag("{id}", "{link}", "{styleSettings}", "{addClass}", "{pageMode}")') + '\n'
 
-
-    # embed_script += f'<iframe class="embedpdf" title="Embedded PDF" src="/_static/pdfjs/web/viewer.html?file={link}#pagemode=none&page=2" allow="fullscreen" style="{styleSettings}"></iframe>\n'
-
-    # print(embed_script)
-    # alternate_text = html_command(command="div", command_features='align="left"', text=alt)
-    # alternate_text = html_command(command="p", text=alternate_text)
-    # embed_html = html_command(
-    #     command="object",
-    #     command_features=f'id = "{id}" type="application/pdf" class="embedpdf" style="{styleSettings}"',
-    #     text=alternate_text,
-    # )
-    # total_html = html_command(
-    #     command="div", command_features='align="center"', text=embed_html + embed_script
-    # )
     return pdf_div + pdf_script + add_PDF_script
 
 
@@ -114,12 +94,9 @@ def link_newTab(role, rawsource, text, lineno, self):
     withSymbol = bool(int(arguments.get("symbol", 1)))
 
     if 0 == len(name) and withSymbol is False:
-        logger.warning(f"No link name or symbol set for {
-                       rawsource} at line {lineno}")
+        logger.warning(f"No link name or symbol set for {rawsource} at line {lineno}")
 
-    node = nodes.raw(
-        text=new_tab_link_html(link=link, name=name, symbol=withSymbol), format="html"
-    )
+    node = nodes.raw(text=new_tab_link_html(link=link, name=name, symbol=withSymbol), format="html")
     return [node], []
 
 
@@ -172,7 +149,7 @@ class PDF_Title_Directive(SphinxDirective):
         "name": directives.unchanged,
         "hidedownload": directives.flag,
         "hidenewtab": directives.flag,
-        "header": directives.nonnegative_int,
+        "headerdepth": directives.nonnegative_int,
         "alt": directives.unchanged,
         "hidepdf": directives.flag,
         "ratio": directives.percentage,
@@ -186,7 +163,7 @@ class PDF_Title_Directive(SphinxDirective):
         pdf_name = Path(path).stem
 
         name = self.options.get("name", pdf_name)
-        header = self.options.get("header", 1)
+        header = self.options.get("headerdepth", 1)
 
         try:
             self.options["hidedownload"]

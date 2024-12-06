@@ -2,17 +2,17 @@ Example PDF Page
 ----------------
 
 .. embedpdf:: /_static/sample.pdf
-   :name: Sample 1
+   :name: Header depth 3
    :alt: Cannot display PDF, please download it with the link above.
    :width: 95
    :ratio: 75
    :addToHeader:
-   :header: 2
+   :headerdepth: 2
 
 .. embedpdf:: /_static/sample.pdf
-   :name: Sample 2
+   :name: Header depth 3
    :alt: Cannot display PDF, please download it with the link above.
    :width: 95
    :ratio: 75
    :addToHeader:
-   :header: 2
+   :headerdepth: 3
