@@ -35,7 +35,8 @@ def new_tab_link_html(link: str, name="", symbol=True) -> str:
 
     html_text = html_command(
         command="a",
-        command_features=f'href="{link}" target="_blank" rel="noopener noreferrer"',
+        command_features=f'href="{
+            link}" target="_blank" rel="noopener noreferrer"',
         text=f"{name}{symbolText}",
     )
     html_text = html_command(command="object", text=html_text)
@@ -54,7 +55,8 @@ def download_html(link: str, name="", symbol=True) -> str:
 
     html_text = html_command(
         command="a",
-        command_features=f'class="reference download internal" download="" href="{link}"',
+        command_features=f'class="reference download internal" download="" href="{
+            link}"',
         text=f"{name}{symbolText}",
     )
     html_text = html_command(command="object", text=html_text)
@@ -67,30 +69,32 @@ def embed_pdf_html(link: str, ratio: float, width: int, alt: str, id: str):
         styleSettings += f"width:{width}%; "
     if 0 != ratio:
         styleSettings += f"aspect-ratio:{ratio};"
-    embed_script =  html_command(command='script', command_features='src="/_static/pdfViewer.js"')
+
+    pdf_div = html_command('div', command_features=f'id="{id}"', text=alt) + '\n'
+    pdf_script = html_command(
+        command='script', command_features='src="/_static/pdfViewer.js"') + '\n'
     # embed_script += html_command(
     #     command="script",
     #     text=f'pdfViewer = document.getElementById("{id}"); pdfViewer.data = PDF_VIEWER.getSrcName("{link}");',
     # )
 
+    add_PDF_script = html_command('script', text=f'addPDFTag("{id}", "{link}", "{styleSettings}", "", "none")') + '\n'
 
 
+    # embed_script += f'<iframe class="embedpdf" title="Embedded PDF" src="/_static/pdfjs/web/viewer.html?file={link}#pagemode=none&page=2" allow="fullscreen" style="{styleSettings}"></iframe>\n'
 
-
-    embed_script += f'<iframe class="embedpdf" title="Embedded PDF" src="/_static/pdfjs/web/viewer.html?file={link}#pagemode=none&page=2" allow="fullscreen" style="{styleSettings}"></iframe>\n'
-
-    print(embed_script)
-    alternate_text = html_command(command="div", command_features='align="left"', text=alt)
-    alternate_text = html_command(command="p", text=alternate_text)
-    embed_html = html_command(
-        command="object",
-        command_features=f'id = "{id}" type="application/pdf" class="embedpdf" style="{styleSettings}"',
-        text=alternate_text,
-    )
-    total_html = html_command(
-        command="div", command_features='align="center"', text=embed_html + embed_script
-    )
-    return total_html
+    # print(embed_script)
+    # alternate_text = html_command(command="div", command_features='align="left"', text=alt)
+    # alternate_text = html_command(command="p", text=alternate_text)
+    # embed_html = html_command(
+    #     command="object",
+    #     command_features=f'id = "{id}" type="application/pdf" class="embedpdf" style="{styleSettings}"',
+    #     text=alternate_text,
+    # )
+    # total_html = html_command(
+    #     command="div", command_features='align="center"', text=embed_html + embed_script
+    # )
+    return pdf_div + pdf_script + add_PDF_script
 
 
 def link_newTab(role, rawsource, text, lineno, self):
@@ -110,7 +114,8 @@ def link_newTab(role, rawsource, text, lineno, self):
     withSymbol = bool(int(arguments.get("symbol", 1)))
 
     if 0 == len(name) and withSymbol is False:
-        logger.warning(f"No link name or symbol set for {rawsource} at line {lineno}")
+        logger.warning(f"No link name or symbol set for {
+                       rawsource} at line {lineno}")
 
     node = nodes.raw(
         text=new_tab_link_html(link=link, name=name, symbol=withSymbol), format="html"
@@ -142,7 +147,8 @@ def download_pdf(role, rawsource, text, lineno, self):
     withSymbol = bool(int(arguments.get("symbol", 1)))
 
     if 0 == len(name) and withSymbol is False:
-        logger.warning(f"No link name or symbol set for {rawsource} at line {lineno}")
+        logger.warning(f"No link name or symbol set for {
+                       rawsource} at line {lineno}")
 
     node = nodes.raw(
         text=download_html(link=link, name=name, symbol=withSymbol), format="html"
@@ -152,7 +158,8 @@ def download_pdf(role, rawsource, text, lineno, self):
 
 def headerLink(ref: str) -> str:
     headerLinkHTML = (
-        f'<a class="headerlink" href="#{ref}" title="Link to this heading">¶</a>'
+        f'<a class="headerlink" href="#{
+            ref}" title="Link to this heading">¶</a>'
     )
     return headerLinkHTML
 
@@ -193,9 +200,10 @@ class PDF_Title_Directive(SphinxDirective):
         except:
             newTabCode = new_tab_link_html(path)
 
-        headerId =  name.lower().replace(" ", "-")
+        headerId = name.lower().replace(" ", "-")
         if "addtoheader" in self.options:
-            htmlHeaderCode = f'<h{header} id="{headerId}">{name}{downloadCode}{newTabCode}{headerLink(headerId)}</h{header}>'
+            htmlHeaderCode = f'<h{header} id="{headerId}">{name}{
+                downloadCode}{newTabCode}{headerLink(headerId)}</h{header}>'
         else:
             htmlHeaderCode = ""
 
@@ -219,7 +227,8 @@ class PDF_Title_Directive(SphinxDirective):
 
             pdfCode = embed_pdf_html(path, ratio, width, alt, headerId+'-pdf')
 
-        paragraph_node = nodes.raw(text=htmlHeaderCode + pdfCode, format="html")
+        paragraph_node = nodes.raw(
+            text=htmlHeaderCode + pdfCode, format="html")
 
         return [nodes.header(), paragraph_node]
 
@@ -232,7 +241,8 @@ def setup(app: Sphinx) -> ExtensionMetadata:
         "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@40,200,0,0"
     )
     app.add_css_file("embedpdf.css")
-    app.config.html_static_path.append(str(Path(__file__).parent.joinpath("resources")))
+    app.config.html_static_path.append(
+        str(Path(__file__).parent.joinpath("resources")))
 
     return {
         "version": __version__,
