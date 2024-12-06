@@ -12,29 +12,52 @@ from sphinx.application import Sphinx
 from sphinx.util.docutils import SphinxDirective, SphinxRole
 from sphinx.util.typing import ExtensionMetadata
 from sphinx.util import logging
+from sphinx.environment import BuildEnvironment
 
 __author__ = "Adrian STEINER"
 __version__ = "0.0.1"
 
 logger = logging.getLogger(__name__)
 
+# global config variables:
+class Global_Config_Type():
+    def __init__(self, variable_name: str, default_value):
+        self.name = variable_name
+        self.default_value = default_value
+        self.value = None
+
+class Global_Configs():
+    download_symbol = Global_Config_Type("embedpdf_download_symbol", "download")
+    newtab_symbol = Global_Config_Type("embedpdf_newtab_symbol", "open_in_new")
+    icon_class = Global_Config_Type("embedpdf_icon_class", "material-symbols-outlined")
+    zoom = Global_Config_Type("embedpdf_zoom", "auto")
+    pagemode =  Global_Config_Type("embedpdf_pagemode", "none")
+    alt =Global_Config_Type("embedpdf_alt", "Cannot display PDF, please download it with the link above.")
+
+global_configs = Global_Configs()
+
 
 def html_command(command: str, command_features="", text="") -> str:
-    return f"<{command} {command_features}>{text}</{command}>"
+    if 0 != len(command_features):
+        tag_features = " "+command_features
+    else:
+        tag_features = ""
+        
+    return f"<{command}{tag_features}>{text}</{command}>"
 
 
 def new_tab_link_html(link: str, name="", symbol=True) -> str:
     if symbol:
         symbolText = html_command(
             command="span",
-            command_features='class="material-symbols-outlined" title="Open in new tab"',
-            text="open_in_new",
+            command_features=f'class="{global_configs.icon_class.value}" title="Open in new tab"',
+            text=global_configs.newtab_symbol.value
         )
     else:
         symbolText = ""
 
     html_text = html_command(
-        command="a",
+        command='a',
         command_features=f'href="{link}" target="_blank" rel="noopener noreferrer"',
         text=f"{name}{symbolText}",
     )
@@ -46,8 +69,8 @@ def download_html(link: str, name="", symbol=True) -> str:
     if symbol:
         symbolText = html_command(
             command="span",
-            command_features='class="material-symbols-outlined" title="Download"',
-            text="download",
+            command_features=f'class="{global_configs.icon_class.value}" title="Download"',
+            text= global_configs.download_symbol.value
         )
     else:
         symbolText = ""
@@ -61,29 +84,19 @@ def download_html(link: str, name="", symbol=True) -> str:
     return html_text
 
 
-def embed_pdf_html(link: str, ratio: float, width: int, alt: str, id: str):
+def embed_pdf_html(link: str, ratio: float, width: int, alt: str, id: str, pageMode="none", addClass="", zoom = "auto"):
     styleSettings = ""
     if 0 != width:
         styleSettings += f"width:{width}%; "
     if 0 != ratio:
         styleSettings += f"aspect-ratio:{ratio};"
-    embed_script =  html_command(command='script', command_features='src="/_static/pdfViewer.js"')
-    embed_script += html_command(
-        command="script",
-        text=f'pdfViewer = document.getElementById("{id}"); pdfViewer.data = PDF_VIEWER.getSrcName("{link}");',
-    )
-    print(embed_script)
-    alternate_text = html_command(command="div", command_features='align="left"', text=alt)
-    alternate_text = html_command(command="p", text=alternate_text)
-    embed_html = html_command(
-        command="object",
-        command_features=f'id = "{id}" type="application/pdf" class="embedpdf" style="{styleSettings}"',
-        text=alternate_text,
-    )
-    total_html = html_command(
-        command="div", command_features='align="center"', text=embed_html + embed_script
-    )
-    return total_html
+
+    pdf_div = html_command('div', command_features=f'id="{id}" align="center"', text=alt) + '\n'
+    pdf_script = html_command(command='script', command_features='src="/_static/pdfViewer.js"') + '\n'
+
+    add_PDF_script = html_command('script', text=f'addPDFTag("{id}", "{link}", "{styleSettings}", "{addClass}", "{pageMode}", "{zoom}")') + '\n'
+
+    return pdf_div + pdf_script + add_PDF_script
 
 
 def link_newTab(role, rawsource, text, lineno, self):
@@ -104,10 +117,9 @@ def link_newTab(role, rawsource, text, lineno, self):
 
     if 0 == len(name) and withSymbol is False:
         logger.warning(f"No link name or symbol set for {rawsource} at line {lineno}")
-
-    node = nodes.raw(
-        text=new_tab_link_html(link=link, name=name, symbol=withSymbol), format="html"
-    )
+    
+    node = nodes.raw(text=new_tab_link_html(
+        link=link, name=name, symbol=withSymbol), format="html")
     return [node], []
 
 
@@ -144,8 +156,10 @@ def download_pdf(role, rawsource, text, lineno, self):
 
 
 def headerLink(ref: str) -> str:
-    headerLinkHTML = (
-        f'<a class="headerlink" href="#{ref}" title="Link to this heading">¶</a>'
+    headerLinkHTML = html_command( 
+        command='a', 
+        command_features=f'class="headerlink" href="#{ref}" title="Link to this heading"',
+        text='¶'
     )
     return headerLinkHTML
 
@@ -155,15 +169,22 @@ class PDF_Title_Directive(SphinxDirective):
     required_arguments = 1
 
     option_spec = {
+        "hideheader": directives.flag,
         "name": directives.unchanged,
         "hidedownload": directives.flag,
         "hidenewtab": directives.flag,
-        "header": directives.nonnegative_int,
+        "headerdepth": directives.nonnegative_int,
         "alt": directives.unchanged,
         "hidepdf": directives.flag,
         "ratio": directives.percentage,
         "width": directives.percentage,
-        "addtoheader": directives.flag,
+        "pagemode": directives.unchanged,
+        "zoom": directives.unchanged,
+        "class": directives.unchanged
+    }
+
+    accepted_pagemode_values = {
+        'none', 'thumbs', 'bookmarks', 'attachments'
     }
 
     def run(self) -> list[nodes.Node]:
@@ -172,50 +193,61 @@ class PDF_Title_Directive(SphinxDirective):
         pdf_name = Path(path).stem
 
         name = self.options.get("name", pdf_name)
-        header = self.options.get("header", 1)
+        headerId = name.lower().replace(" ", "-")
 
-        try:
-            self.options["hidedownload"]
-            downloadCode = ""
-        except:
-            downloadCode = download_html(link=path)
-
-        try:
-            self.options["hidenewtab"]
-            newTabCode = ""
-        except:
-            newTabCode = new_tab_link_html(path)
-
-        headerId =  name.lower().replace(" ", "-")
-        if "addtoheader" in self.options:
-            htmlHeaderCode = f'<h{header} id="{headerId}">{name}{downloadCode}{newTabCode}{headerLink(headerId)}</h{header}>'
-        else:
+        if "hideheader" in self.options:
             htmlHeaderCode = ""
+        else:
+            header = self.options.get("headerdepth", 1)
+
+            if "hidedownload" in self.options:
+                downloadCode = ""
+            else:
+                downloadCode = download_html(link=path)
+
+            if "hidenewtab" in self.options:
+                newTabCode = ""
+            else:
+                newTabCode = new_tab_link_html(path)
+
+            htmlHeaderCode = html_command(f'h{header}', command_features=f'id="{headerId}"', text=f'{name}{downloadCode}{newTabCode}{headerLink(headerId)}')
+
 
         alt = self.options.get(
-            "alt", "Cannot display PDF, please download it with the link above."
+            "alt", global_configs.alt.value
         )
 
-        try:
-            self.options["hidepdf"]
+        if "hidepdf" in self.options:
             pdfCode = ""
-        except:
-            try:
-                ratio = self.options["ratio"] / 100
-            except:
-                ratio = 0
+        else:
 
-            try:
-                width = self.options["width"]
-            except:
-                width = 0
+            ratio = self.options.get("ratio", 0) / 100
 
-            pdfCode = embed_pdf_html(path, ratio, width, alt, headerId+'-pdf')
+            width = self.options.get("width", 0) 
+
+            pagemode = self.options.get("pagemode", global_configs.pagemode.value)
+
+            if pagemode not in self.accepted_pagemode_values:
+                logger.warning(f'pagemode: {pagemode} not allowed.\n Allowed pagemode arguments: {self.accepted_pagemode_values}')
+                pagemode = "none"
+            
+            zoom = self.options.get("zoom", global_configs.zoom.value)
+
+            additional_class = self.options.get("class", "")
+
+            pdfCode = embed_pdf_html(path, ratio, width, alt, headerId+'-pdf', pageMode=pagemode, addClass=additional_class, zoom=zoom)
 
         paragraph_node = nodes.raw(text=htmlHeaderCode + pdfCode, format="html")
 
         return [nodes.header(), paragraph_node]
 
+def add_embed_pdf_lib(app: Sphinx, env: BuildEnvironment, docnames):
+    global_configs.download_symbol.value = app.config.embedpdf_download_symbol
+    global_configs.newtab_symbol.value = app.config.embedpdf_newtab_symbol
+    global_configs.icon_class.value = app.config.embedpdf_icon_class
+    global_configs.zoom.value = app.config.embedpdf_zoom
+    global_configs.pagemode.value = app.config.embedpdf_pagemode
+    global_configs.alt.value = app.config.embedpdf_alt
 
 def setup(app: Sphinx) -> ExtensionMetadata:
     app.add_directive("embedpdf", PDF_Title_Directive)
@@ -226,7 +258,13 @@ def setup(app: Sphinx) -> ExtensionMetadata:
     )
     app.add_css_file("embedpdf.css")
     app.config.html_static_path.append(str(Path(__file__).parent.joinpath("resources")))
-
+    app.add_config_value(name=global_configs.download_symbol.name, default=global_configs.download_symbol.default_value, rebuild='html', description="glog")
+    app.add_config_value(global_configs.newtab_symbol.name, global_configs.newtab_symbol.default_value, 'html')
+    app.add_config_value(global_configs.icon_class.name, global_configs.icon_class.default_value, 'html')
+    app.add_config_value(global_configs.zoom.name, global_configs.zoom.default_value, 'html')
+    app.add_config_value(global_configs.pagemode.name, global_configs.pagemode.default_value, 'html')
+    app.add_config_value(global_configs.alt.name, global_configs.alt.default_value, 'html')
+    app.connect('env-before-read-docs', add_embed_pdf_lib)
     return {
         "version": __version__,
         "parallel_read_safe": True,

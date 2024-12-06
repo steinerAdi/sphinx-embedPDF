@@ -12,7 +12,7 @@ setup(
     download_url='https://github.com/steinerAdi/sphinx-embedPDF.git',
     license='MIT',
     author='Adrian STEINER',
-    author_email='sna4@bfh.ch',
+    author_email='adi.steiner@hotmail.ch',
     description='Sphinx embed PDF extension',
     long_description=long_desc,
     long_description_content_type="text/markdown",
