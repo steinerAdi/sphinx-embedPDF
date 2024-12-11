@@ -1,7 +1,7 @@
 Example PDF Page
 ----------------
 
-.. embedpdf:: /_static/sample.pdf
+.. embedpdf:: ../../../_static/sample.pdf
    :name: Header depth 2
    :alt: Cannot display PDF, please download it with the link above.
    :width: 95
