@@ -33,8 +33,7 @@ setup(
     packages=find_packages(),
     package_data={
         "sphinx_embedpdf": [
-            "resources/embedpdf.css",
-            "resources/pdfViewer.js"
+            "resources/**"
         ]
     },
     include_package_data=True,
