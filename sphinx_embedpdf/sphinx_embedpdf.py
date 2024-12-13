@@ -227,12 +227,12 @@ class PDF_Title_Directive(SphinxDirective):
             if "hidedownload" in self.options:
                 downloadCode = ""
             else:
-                downloadCode = download_html(link=path)
+                downloadCode = download_html(link=f'{RELATIVE_PATH_TO_STATIC}/{path}')
 
             if "hidenewtab" in self.options:
                 newTabCode = ""
             else:
-                newTabCode = new_tab_link_html(path)
+                newTabCode = new_tab_link_html(link=f'{RELATIVE_PATH_TO_STATIC}/{path}')
 
             htmlHeaderCode = html_command(f'h{header}', command_features=f'id="{headerId}"', text=f'{name}{downloadCode}{newTabCode}{headerLink(headerId)}')
 
