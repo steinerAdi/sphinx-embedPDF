@@ -34,6 +34,7 @@ exclude_patterns = []
 html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
 html_favicon = '_static/favicon.png'
+html_baseurl = 'sphinx-embedPDF/'
 #html_logo = html_favicon
 
 html_context = {
