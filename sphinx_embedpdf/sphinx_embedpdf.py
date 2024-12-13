@@ -117,8 +117,8 @@ def embed_pdf_html(link: str, ratio: float, width: int, alt: str, id: str, pageM
 
     pdf_div = html_command('div', command_features=f'id="{id}" align="center"', text=alt) + '\n'
     pdf_script = html_command(command='script', command_features=f'src="{RELATIVE_PATH_TO_STATIC}/pdfViewer.js"') + '\n'
-    print(RELATIVE_PATH_TO_STATIC)
-    add_PDF_script = html_command('script', text=f'addPDFTag("{id}", "../../{link}", "{styleSettings}", "{addClass}", "{pageMode}", "{zoom}")') + '\n'
+    # print(RELATIVE_PATH_TO_STATIC)
+    add_PDF_script = html_command('script', text=f'addPDFTag("{id}", "../../{link}", "{RELATIVE_PATH_TO_STATIC}/" , "{styleSettings}", "{addClass}", "{pageMode}", "{zoom}")') + '\n'
 
     return pdf_div + pdf_script + add_PDF_script
 

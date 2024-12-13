@@ -13,7 +13,7 @@ PDF Page can be used to set a title including a download icon and new tab icon
 
 .. code-block:: rst
 
-   .. embedpdf:: /sample.pdf
+   .. embedpdf:: sample.pdf
       :alt: Alternative text to show pdf is not visible
       :name: Embed PDF Sample
       :width: 95
@@ -22,7 +22,7 @@ PDF Page can be used to set a title including a download icon and new tab icon
 
 Which results in:
 
-.. embedpdf:: /sample.pdf
+.. embedpdf:: sample.pdf
    :alt: Alternative text to show pdf is not visible
    :name: Embed PDF Sample
    :width: 95
