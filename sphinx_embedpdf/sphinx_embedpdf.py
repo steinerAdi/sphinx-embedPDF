@@ -14,10 +14,26 @@ from sphinx.util.typing import ExtensionMetadata
 from sphinx.util import logging
 from sphinx.environment import BuildEnvironment
 
+import os
+
+RELATIVE_PATH_TO_STATIC = ''
+
 __author__ = "Adrian STEINER"
 __version__ = "0.0.1"
 
 logger = logging.getLogger(__name__)
+
+def get_current_rst_file(app: Sphinx, docname: str, source: list):
+    """Event handler, der das aktuell bearbeitete .rst-File ausgibt."""
+    # print(f"Current working .rst-File: {docname}.rst")
+    # print(os.path.abspath(docname))
+    static_dir = os.path.commonpath([os.path.abspath(docname), app.srcdir]) + '/_static'
+    file_dir = os.path.abspath(os.path.dirname(docname))
+    #print(static_dir)
+    #print(file_dir)
+    global RELATIVE_PATH_TO_STATIC
+    RELATIVE_PATH_TO_STATIC = './' + os.path.relpath(static_dir, file_dir)
+    #print(RELATIVE_PATH_TO_STATIC)
 
 # global config variables:
 class Global_Config_Type():
@@ -91,10 +107,18 @@ def embed_pdf_html(link: str, ratio: float, width: int, alt: str, id: str, pageM
     if 0 != ratio:
         styleSettings += f"aspect-ratio:{ratio};"
 
-    pdf_div = html_command('div', command_features=f'id="{id}" align="center"', text=alt) + '\n'
-    pdf_script = html_command(command='script', command_features='src="/_static/pdfViewer.js"') + '\n'
+    # Absoluten Pfad zur aktuellen Datei ermitteln
+    # current_file_path = os.path.abspath(__file__)
 
-    add_PDF_script = html_command('script', text=f'addPDFTag("{id}", "{link}", "{styleSettings}", "{addClass}", "{pageMode}", "{zoom}")') + '\n'
+    # # Relativen Pfad zu einem anderen Verzeichnis (z.B. zum _static Ordner)
+    # relative_path = os.path.join(os.path.dirname(current_file_path), '_static')
+
+    #print(f"Current path: {current_file_path} Relativer Pfad: {relative_path}")
+
+    pdf_div = html_command('div', command_features=f'id="{id}" align="center"', text=alt) + '\n'
+    pdf_script = html_command(command='script', command_features=f'src="{RELATIVE_PATH_TO_STATIC}/pdfViewer.js"') + '\n'
+    print(RELATIVE_PATH_TO_STATIC)
+    add_PDF_script = html_command('script', text=f'addPDFTag("{id}", "../../{link}", "{styleSettings}", "{addClass}", "{pageMode}", "{zoom}")') + '\n'
 
     return pdf_div + pdf_script + add_PDF_script
 
@@ -265,6 +289,8 @@ def setup(app: Sphinx) -> ExtensionMetadata:
     app.add_config_value(global_configs.pagemode.name, global_configs.pagemode.default_value, 'html')
     app.add_config_value(global_configs.alt.name, global_configs.alt.default_value, 'html')
     app.connect('env-before-read-docs', add_embed_pdf_lib)
+    #app.connect('builder-inited', on_builder_inited)
+    app.connect('source-read', get_current_rst_file)
     return {
         "version": __version__,
         "parallel_read_safe": True,
