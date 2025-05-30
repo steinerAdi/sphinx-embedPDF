@@ -1,7 +1,7 @@
 """
 Sphinx embed PDF into websites including controlling the page of the PDF.
-@author Adrian STEINER
-@copyright Copyright (c) 2024 Adrian STEINER
+@author Adrian STEINER (adi.steiner@hotmail.ch)
+@copyright Copyright (c) 2024, 2025 Adrian STEINER
 """
 
 from __future__ import annotations
@@ -29,15 +29,18 @@ logger = logging.getLogger(__name__)
 def get_current_rst_file(app: Sphinx, docname: str, source: list):
     """Event handler, which returns the current rst file"""
     static_dir = os.path.commonpath([os.path.abspath(docname), app.srcdir]) + "/_static"
-    print(static_dir)
-    print(app.config.html_static_path)
+    print("App src dir: ", app.srcdir)
+    # print("static dir: ", static_dir)
+    print("static path:", app.config.html_static_path)
+    # print("Source: ", source)
     file_dir = os.path.abspath(os.path.dirname(docname))
     global RELATIVE_PATH_TO_STATIC
     RELATIVE_PATH_TO_STATIC = "./" + os.path.relpath(static_dir, file_dir)
+    # print("Relative path to static: ", RELATIVE_PATH_TO_STATIC)
 
 
 def parse_link_role_text(text: str) -> Tuple[str, str, bool]:
-    # Split link from symbol text
+    """Pars the link path with the system 'name <link>|<with Symbol>'"""
     parts = text.split("|")
     identity = parts[0].strip()
     with_symbol = parts[1].strip().lower() == "true" if len(parts) > 1 else False
@@ -48,8 +51,6 @@ def parse_link_role_text(text: str) -> Tuple[str, str, bool]:
         # Link with name
         name = match.group(1).strip()
         link = match.group(2).strip()
-        print("Name:", name)
-        print("Link:", link)
     else:
         # No link name, used directly the link without <>
         link = identity
@@ -90,10 +91,11 @@ def html_command(command: str, command_features="", text="") -> str:
 
 
 def new_tab_link_html(link: str, name="", symbol=True) -> str:
+    """Generates the html instructions for a new-tab link"""
     if symbol:
         symbolText = html_command(
             command="span",
-            command_features=f'class="{global_configs.icon_class.value}" title="Open in new tab"',
+            command_features=f'class="{global_configs.icon_class.value}" title="{link}"',
             text=global_configs.newtab_symbol.value,
         )
     else:
@@ -101,7 +103,7 @@ def new_tab_link_html(link: str, name="", symbol=True) -> str:
 
     html_text = html_command(
         command="a",
-        command_features=f'href="{link}" target="_blank" rel="noopener noreferrer"',
+        command_features=f'href="{link}" target="_blank" rel="noopener noreferrer" title="{link}"',
         text=f"{name}{symbolText}",
     )
     html_text = html_command(command="object", text=html_text)
@@ -109,6 +111,7 @@ def new_tab_link_html(link: str, name="", symbol=True) -> str:
 
 
 def download_html(link: str, name="", symbol=True) -> str:
+    """Generates html instructions for downloads"""
     if symbol:
         symbolText = html_command(
             command="span",
@@ -137,19 +140,12 @@ def embed_pdf_html(
     addClass="",
     zoom="auto",
 ):
+    """Generates the html instructions for an embedded PDF file with pdfjs"""
     styleSettings = ""
     if 0 != width:
         styleSettings += f"width:{width}%; "
     if 0 != ratio:
         styleSettings += f"aspect-ratio:{ratio};"
-
-    # Absoluten Pfad zur aktuellen Datei ermitteln
-    # current_file_path = os.path.abspath(__file__)
-
-    # # Relativen Pfad zu einem anderen Verzeichnis (z.B. zum _static Ordner)
-    # relative_path = os.path.join(os.path.dirname(current_file_path), '_static')
-
-    # print(f"Current path: {current_file_path} Relativer Pfad: {relative_path}")
 
     pdf_div = (
         html_command("div", command_features=f'id="{id}" align="center"', text=alt)
@@ -162,7 +158,7 @@ def embed_pdf_html(
         )
         + "\n"
     )
-    # print(RELATIVE_PATH_TO_STATIC)
+
     add_PDF_script = (
         html_command(
             "script",
@@ -175,6 +171,7 @@ def embed_pdf_html(
 
 
 def link_newTab(role, rawsource, text, lineno, self):
+    """Sphinx role callback function to generate a new tab link"""
     [name, link, with_symbol] = parse_link_role_text(text)
     node = nodes.raw(
         text=new_tab_link_html(link=link, name=name, symbol=with_symbol), format="html"
@@ -183,44 +180,22 @@ def link_newTab(role, rawsource, text, lineno, self):
 
 
 def download_pdf(role, rawsource, text, lineno, self):
-
-    text = text.replace(" ", "")
-    arguments = {}
-    # read specs
-    for component in text.split(","):
-        arguments[component.split(":")[0]] = component.split(":", 1)[1]
-
-    link = arguments.get("src", None)
-
-    if link is None:
-        logger.error(f"No src:link set for {rawsource} at line {lineno}")
-        return
-
-    link = arguments.get("src", None)
-
-    if link is None:
-        logger.warning(f"No src link set for {rawsource} at line {lineno}")
-        return
-
-    name = arguments.get("name", "")
-    withSymbol = bool(int(arguments.get("symbol", 1)))
-
-    if 0 == len(name) and withSymbol is False:
-        logger.warning(f"No link name or symbol set for {rawsource} at line {lineno}")
+    """Sphinx role callback function to generate a download section with a symbol"""
+    [name, link, with_symbol] = parse_link_role_text(text)
 
     node = nodes.raw(
-        text=download_html(link=link, name=name, symbol=withSymbol), format="html"
+        text=download_html(link=link, name=name, symbol=with_symbol), format="html"
     )
     return [node], []
 
 
-def headerLink(ref: str) -> str:
-    headerLinkHTML = html_command(
+def header_link(ref: str) -> str:
+    header_link_HTML = html_command(
         command="a",
         command_features=f'class="headerlink" href="#{ref}" title="Link to this heading"',
         text="¶",
     )
-    return headerLinkHTML
+    return header_link_HTML
 
 
 class PDF_Title_Directive(SphinxDirective):
@@ -266,11 +241,11 @@ class PDF_Title_Directive(SphinxDirective):
                 newTabCode = ""
             else:
                 newTabCode = new_tab_link_html(link=f"{RELATIVE_PATH_TO_STATIC}/{path}")
-
+            print("PDF Link", {RELATIVE_PATH_TO_STATIC}, "/", {path})
             htmlHeaderCode = html_command(
                 f"h{header}",
                 command_features=f'id="{headerId}"',
-                text=f"{name}{downloadCode}{newTabCode}{headerLink(headerId)}",
+                text=f"{name}{downloadCode}{newTabCode}{header_link(headerId)}",
             )
 
         alt = self.options.get("alt", global_configs.alt.value)
@@ -312,6 +287,7 @@ class PDF_Title_Directive(SphinxDirective):
 
 
 def add_embed_pdf_lib(app: Sphinx, env: BuildEnvironment, docnames):
+    """Read out all configuration variables"""
     global_configs.download_symbol.value = app.config.embedpdf_download_symbol
     global_configs.newtab_symbol.value = app.config.embedpdf_newtab_symbol
     global_configs.icon_class.value = app.config.embedpdf_icon_class
@@ -323,7 +299,7 @@ def add_embed_pdf_lib(app: Sphinx, env: BuildEnvironment, docnames):
 def setup(app: Sphinx) -> ExtensionMetadata:
     app.add_directive("embedpdf", PDF_Title_Directive)
     app.add_role("ntLink", link_newTab)
-    app.add_role("downloadPDF", download_pdf)
+    app.add_role("download_file", download_pdf)
     app.add_css_file(
         "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@40,200,0,0"
     )
