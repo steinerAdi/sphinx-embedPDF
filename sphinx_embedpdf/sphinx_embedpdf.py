@@ -173,6 +173,18 @@ def embed_pdf_html(
 
     return pdf_div + pdf_script + add_PDF_script
 
+def get_real_link(file_path: Path, sphinx_src_path: Path, current_document_path: Path) -> bool:
+    if file_path.is_absolute():
+        file_path = Path(os.path.join(APP_SRC_DIR, str(link_path).lstrip("/")))
+    else:
+        # Relative path to current file
+        file_path = Path(os.path.join(document_name, link_path))
+    if link_path.is_file():
+        print("File exists: ", link_path)
+    else:
+        logger.warning(f"Download file not readable: {link_path}", location=(str(document_name), int(lineno)))
+
+    return False
 
 def link_newTab(role, rawsource, text, lineno, self):
     """Sphinx role callback function to generate a new tab link"""
@@ -188,16 +200,10 @@ def download_pdf(role, rawtext, text, lineno, inliner, options={}, content=[]):
     [name, link, with_symbol] = parse_link_role_text(text)
     link_path = Path(link)
     document_name = Path(inliner.document["source"]).with_suffix('')
-    print("Document name: ", document_name)
-    env = inliner.document.settings.env
-
-    # Zugriff auf die Sphinx-App
-    app = env.app
-
-    # Jetzt kannst du z. B. srcdir holen
-    srcdir = app.srcdir
+    srcdir = inliner.document.settings.env.app.srcdir
     print("Src dir from download: ", srcdir)
     if link_path.is_absolute():
+        print("Absolute path: ", link_path)
         link_path = Path(os.path.join(APP_SRC_DIR, str(link_path).lstrip("/")))
     else:
         # Relative path to current file
