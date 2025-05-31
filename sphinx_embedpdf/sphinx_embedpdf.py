@@ -19,6 +19,7 @@ import re
 import os
 
 RELATIVE_PATH_TO_STATIC = ""
+APP_SRC_DIR = ""
 
 __author__ = "Adrian STEINER"
 __version__ = "0.1.0"
@@ -29,9 +30,12 @@ logger = logging.getLogger(__name__)
 def get_current_rst_file(app: Sphinx, docname: str, source: list):
     """Event handler, which returns the current rst file"""
     static_dir = os.path.commonpath([os.path.abspath(docname), app.srcdir]) + "/_static"
-    print("App src dir: ", app.srcdir)
+    global APP_SRC_DIR
+    APP_SRC_DIR = app.srcdir
+    # print("Out dir: ", app.outdir)
+    # print("App src dir: ", app.srcdir)
     # print("static dir: ", static_dir)
-    print("static path:", app.config.html_static_path)
+    # print("static path:", app.config.html_static_path)
     # print("Source: ", source)
     file_dir = os.path.abspath(os.path.dirname(docname))
     global RELATIVE_PATH_TO_STATIC
@@ -179,9 +183,29 @@ def link_newTab(role, rawsource, text, lineno, self):
     return [node], []
 
 
-def download_pdf(role, rawsource, text, lineno, self):
+def download_pdf(role, rawtext, text, lineno, inliner, options={}, content=[]):
     """Sphinx role callback function to generate a download section with a symbol"""
     [name, link, with_symbol] = parse_link_role_text(text)
+    link_path = Path(link)
+    document_name = Path(inliner.document["source"])
+    env = inliner.document.settings.env
+
+    # Zugriff auf die Sphinx-App
+    app = env.app
+
+    # Jetzt kannst du z. B. srcdir holen
+    srcdir = app.srcdir
+    print("Src dir from download: ", srcdir)
+    if link_path.is_absolute():
+        link_path = Path(os.path.join(APP_SRC_DIR, str(link_path).lstrip("/")))
+    else:
+        # Relative path to current file
+        print("use relative path ", link_path)
+        link_path = Path(os.path.join(document_name, link_path))
+    if link_path.is_file():
+        print("File exists: ", link_path)
+    else:
+        logger.error(f"File not found at {document_name} {lineno}: {link_path}")
 
     node = nodes.raw(
         text=download_html(link=link, name=name, symbol=with_symbol), format="html"
@@ -241,7 +265,7 @@ class PDF_Title_Directive(SphinxDirective):
                 newTabCode = ""
             else:
                 newTabCode = new_tab_link_html(link=f"{RELATIVE_PATH_TO_STATIC}/{path}")
-            print("PDF Link", {RELATIVE_PATH_TO_STATIC}, "/", {path})
+            # print("PDF Link", {RELATIVE_PATH_TO_STATIC}, "/", {path})
             htmlHeaderCode = html_command(
                 f"h{header}",
                 command_features=f'id="{headerId}"',
@@ -309,7 +333,7 @@ def setup(app: Sphinx) -> ExtensionMetadata:
         name=global_configs.download_symbol.name,
         default=global_configs.download_symbol.default_value,
         rebuild="html",
-        description="glog",
+        description="",
     )
     app.add_config_value(
         global_configs.newtab_symbol.name,
