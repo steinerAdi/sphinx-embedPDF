@@ -187,7 +187,8 @@ def download_pdf(role, rawtext, text, lineno, inliner, options={}, content=[]):
     """Sphinx role callback function to generate a download section with a symbol"""
     [name, link, with_symbol] = parse_link_role_text(text)
     link_path = Path(link)
-    document_name = Path(inliner.document["source"])
+    document_name = Path(inliner.document["source"]).with_suffix('')
+    print("Document name: ", document_name)
     env = inliner.document.settings.env
 
     # Zugriff auf die Sphinx-App
@@ -205,7 +206,7 @@ def download_pdf(role, rawtext, text, lineno, inliner, options={}, content=[]):
     if link_path.is_file():
         print("File exists: ", link_path)
     else:
-        logger.error(f"File not found at {document_name} {lineno}: {link_path}")
+        logger.warning(f"Download file not readable: {link_path}", location=(str(document_name), int(lineno)))
 
     node = nodes.raw(
         text=download_html(link=link, name=name, symbol=with_symbol), format="html"

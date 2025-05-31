@@ -33,6 +33,8 @@ or :download_file:`/_static/sample.pdf|true`
 or :download_file:`/_static/samples.pdf` 
 or :download_file:`/_static/sample.pdf|false`.
 
+:download:`/_static/samples.pdf`
+
 
 
 Embed PDF
