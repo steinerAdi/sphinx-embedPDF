@@ -186,7 +186,7 @@ def get_real_link(file_path: Path, sphinx_src_path: Path, current_document_path:
 
     return False
 
-def link_newTab(role, rawsource, text, lineno, self):
+def link_newTab(role, rawtext, text, lineno, inliner, options={}, content=[]):
     """Sphinx role callback function to generate a new tab link"""
     [name, link, with_symbol] = parse_link_role_text(text)
     node = nodes.raw(
@@ -198,17 +198,18 @@ def link_newTab(role, rawsource, text, lineno, self):
 def download_pdf(role, rawtext, text, lineno, inliner, options={}, content=[]):
     """Sphinx role callback function to generate a download section with a symbol"""
     [name, link, with_symbol] = parse_link_role_text(text)
-    link_path = Path(link)
-    document_name = Path(inliner.document["source"]).with_suffix('')
+    document_path = Path(inliner.document["source"])
+    document_name = document_path.with_suffix("")
+    document_parent = document_path.parent
     srcdir = inliner.document.settings.env.app.srcdir
-    print("Src dir from download: ", srcdir)
-    if link_path.is_absolute():
-        print("Absolute path: ", link_path)
-        link_path = Path(os.path.join(APP_SRC_DIR, str(link_path).lstrip("/")))
+    if link.startswith("/"):
+        link_path = Path(srcdir) /  Path(*(Path(link).parts[1:]))
+        print("Absoulte path results in:", link_path)
     else:
         # Relative path to current file
-        print("use relative path ", link_path)
-        link_path = Path(os.path.join(document_name, link_path))
+        print("use relative path ", link)
+        print("Document name is ", document_name)
+        link_path = document_parent /  Path(link)
     if link_path.is_file():
         print("File exists: ", link_path)
     else:
