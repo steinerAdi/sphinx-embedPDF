@@ -207,16 +207,19 @@ def download_pdf(role, rawtext, text, lineno, inliner, options={}, content=[]):
         print("Absoulte path results in:", link_path)
     else:
         # Relative path to current file
-        print("use relative path ", link)
-        print("Document name is ", document_name)
-        link_path = document_parent /  Path(link)
-    if link_path.is_file():
-        print("File exists: ", link_path)
-    else:
+        # print("use relative path ", link)
+        # print("Document name is ", document_name)
+        link_path = (document_parent /  Path(link)).resolve()
+        print("Relative path results in:", link_path)
+    if not link_path.is_file():
         logger.warning(f"Download file not readable: {link_path}", location=(str(document_name), int(lineno)))
 
+    # Generate relative link to current file path
+    # download_link = link_path.resolve().relative_to(document_parent.resolve())
+    download_link = os.path.relpath(link_path, start=document_parent)
+    print("Download relative link:", download_link)
     node = nodes.raw(
-        text=download_html(link=link, name=name, symbol=with_symbol), format="html"
+        text=download_html(link=download_link, name=name, symbol=with_symbol), format="html"
     )
     return [node], []
 

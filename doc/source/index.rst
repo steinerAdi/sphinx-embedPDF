@@ -28,12 +28,15 @@ To add a download from a file, use the following code:
    or :download_file:`https://www.google.com` 
    or :download_file:`https://www.google.com|false`.
 
-Which results in: :download_file:`sample.pdf <_static/sample.pdf>|true` 
-or :download_file:`/_static/sample.pdf|true` 
-or :download_file:`/_static/samples.pdf` 
-or :download_file:`/_static/sample.pdf|false`.
+.. Which results in: :download_file:`sample.pdf <_static/sample.pdf>|true` 
 
-:download:`/_static/samples.pdf`
+.. or :download_file:`/_static/sample.pdf|true` 
+
+.. or :download_file:`/_static/samples.pdf` 
+
+.. or :download_file:`/_static/sample.pdf|false`.
+
+.. :download:`/_static/samples.pdf`
 
 
 
