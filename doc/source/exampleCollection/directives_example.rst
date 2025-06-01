@@ -1,5 +1,9 @@
-Example PDF Page
-----------------
+Examples Sphinx Directives
+==========================
+
+
+Embedded PDF Examples
+---------------------
 
 .. embedpdf:: sample.pdf
    :name: Header depth 2
