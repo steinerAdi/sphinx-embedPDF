@@ -18,11 +18,11 @@ setup(
     long_description_content_type="text/markdown",
     zip_safe=False,
     classifiers=[
-        'Development Status :: 0.0.1',
+        'Development Status :: 0.10',
         'Environment :: Console',
         'Environment :: Web Environment',
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: BSD License',
+        'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
         'Framework :: Sphinx :: Extension',

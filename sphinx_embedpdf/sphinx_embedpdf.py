@@ -173,18 +173,12 @@ def embed_pdf_html(
 
     return pdf_div + pdf_script + add_PDF_script
 
-def get_real_link(file_path: Path, sphinx_src_path: Path, current_document_path: Path) -> bool:
-    if file_path.is_absolute():
-        file_path = Path(os.path.join(APP_SRC_DIR, str(link_path).lstrip("/")))
+def get_file_path(file_path: Path, sphinx_src_path: Path, current_document_path: Path) -> Path:
+    if str(file_path).startswith("/"):
+        link_path = Path(sphinx_src_path) / Path(*(file_path.parts[1:]))
     else:
-        # Relative path to current file
-        file_path = Path(os.path.join(document_name, link_path))
-    if link_path.is_file():
-        print("File exists: ", link_path)
-    else:
-        logger.warning(f"Download file not readable: {link_path}", location=(str(document_name), int(lineno)))
-
-    return False
+        link_path = (current_document_path / file_path).resolve()
+    return link_path
 
 def link_newTab(role, rawtext, text, lineno, inliner, options={}, content=[]):
     """Sphinx role callback function to generate a new tab link"""
@@ -202,22 +196,17 @@ def download_pdf(role, rawtext, text, lineno, inliner, options={}, content=[]):
     document_name = document_path.with_suffix("")
     document_parent = document_path.parent
     srcdir = inliner.document.settings.env.app.srcdir
-    if link.startswith("/"):
-        link_path = Path(srcdir) /  Path(*(Path(link).parts[1:]))
-        print("Absoulte path results in:", link_path)
-    else:
-        # Relative path to current file
-        # print("use relative path ", link)
-        # print("Document name is ", document_name)
-        link_path = (document_parent /  Path(link)).resolve()
-        print("Relative path results in:", link_path)
+
+    # Get real file path
+    link_path = get_file_path(Path(link), srcdir, document_parent)
+    
+    # Check file exists to download
     if not link_path.is_file():
         logger.warning(f"Download file not readable: {link_path}", location=(str(document_name), int(lineno)))
+        return [],[]
 
     # Generate relative link to current file path
-    # download_link = link_path.resolve().relative_to(document_parent.resolve())
     download_link = os.path.relpath(link_path, start=document_parent)
-    print("Download relative link:", download_link)
     node = nodes.raw(
         text=download_html(link=download_link, name=name, symbol=with_symbol), format="html"
     )
