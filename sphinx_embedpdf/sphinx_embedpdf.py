@@ -27,22 +27,6 @@ __version__ = "0.1.0"
 logger = logging.getLogger(__name__)
 
 
-def get_current_rst_file(app: Sphinx, docname: str, source: list):
-    """Event handler, which returns the current rst file"""
-    static_dir = os.path.commonpath([os.path.abspath(docname), app.srcdir]) + "/_static"
-    global APP_SRC_DIR
-    APP_SRC_DIR = app.srcdir
-    # print("Out dir: ", app.outdir)
-    # print("App src dir: ", app.srcdir)
-    # print("static dir: ", static_dir)
-    # print("static path:", app.config.html_static_path)
-    # print("Source: ", source)
-    file_dir = os.path.abspath(os.path.dirname(docname))
-    global RELATIVE_PATH_TO_STATIC
-    RELATIVE_PATH_TO_STATIC = "./" + os.path.relpath(static_dir, file_dir)
-    # print("Relative path to static: ", RELATIVE_PATH_TO_STATIC)
-
-
 def parse_link_role_text(text: str) -> Tuple[str, str, bool]:
     """Pars the link path with the system 'name <link>|<with Symbol>'"""
     parts = text.split("|")
@@ -81,9 +65,7 @@ class Global_Configs:
         "embedpdf_alt", "Cannot display PDF, please download it with the link above."
     )
 
-
 global_configs = Global_Configs()
-
 
 def html_command(command: str, command_features="", text="") -> str:
     if 0 != len(command_features):
@@ -180,6 +162,7 @@ def get_file_path(file_path: Path, sphinx_src_path: Path, current_document_path:
         link_path = (current_document_path / file_path).resolve()
     return link_path
 
+
 def link_newTab(role, rawtext, text, lineno, inliner, options={}, content=[]):
     """Sphinx role callback function to generate a new tab link"""
     [name, link, with_symbol] = parse_link_role_text(text)
@@ -245,8 +228,24 @@ class PDF_Title_Directive(SphinxDirective):
 
     def run(self) -> list[nodes.Node]:
 
-        path = self.arguments[0]
-        pdf_name = Path(path).stem
+        env = self.state.document.settings.env
+        srcdir = env.app.srcdir
+        doc_name = env.docname 
+        doc_path = os.path.join(srcdir, doc_name)
+        doc_parent = Path(doc_path).parent
+
+        # Get real file path
+        path = Path(self.arguments[0])
+        link_path = get_file_path(path, srcdir, doc_parent)
+    
+        # Check file exists to download
+        if not link_path.is_file():
+            logger.warning(f"Embed PDF not readable: {link_path}", location=(str(doc_name), int(self.lineno)))
+
+        # Generate relative link to current file path
+        embed_relative_link = os.path.relpath(link_path, start=doc_parent)
+
+        pdf_name = path.stem
 
         name = self.options.get("name", pdf_name)
         headerId = name.lower().replace(" ", "-")
@@ -353,8 +352,7 @@ def setup(app: Sphinx) -> ExtensionMetadata:
         global_configs.alt.name, global_configs.alt.default_value, "html"
     )
     app.connect("env-before-read-docs", add_embed_pdf_lib)
-    # app.connect('builder-inited', on_builder_inited)
-    app.connect("source-read", get_current_rst_file)
+
     return {
         "version": __version__,
         "parallel_read_safe": True,
