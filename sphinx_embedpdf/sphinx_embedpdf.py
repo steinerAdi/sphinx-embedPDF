@@ -117,13 +117,14 @@ def download_html(link: str, name="", symbol=True) -> str:
 
 
 def embed_pdf_html(
-    link: str,
+    static_pdf_path: str,
     ratio: float,
     width: int,
     alt: str,
     id: str,
-    pageMode="none",
-    addClass="",
+    relative_out_dir: str,
+    page_mode="none",
+    additional_class="",
     zoom="auto",
 ):
     """Generates the html instructions for an embedded PDF file with pdfjs"""
@@ -140,7 +141,7 @@ def embed_pdf_html(
     pdf_script = (
         html_command(
             command="script",
-            command_features=f'src="{RELATIVE_PATH_TO_STATIC}/pdfViewer.js"',
+            command_features=f'src="{relative_out_dir}/_static/pdfViewer.js"',
         )
         + "\n"
     )
@@ -148,7 +149,7 @@ def embed_pdf_html(
     add_PDF_script = (
         html_command(
             "script",
-            text=f'addPDFTag("{id}", "../../{link}", "{RELATIVE_PATH_TO_STATIC}/" , "{styleSettings}", "{addClass}", "{pageMode}", "{zoom}")',
+            text=f'addPDFTag(id="{id}", link="../../{static_pdf_path}, relativOutDir = "{relative_out_dir}/", styleSettings = "{styleSettings}", additionalClass = "{additional_class}", pageMode = "{page_mode}", zoom = "{zoom}")'
         )
         + "\n"
     )
@@ -236,14 +237,21 @@ class PDF_Title_Directive(SphinxDirective):
 
         # Get real file path
         path = Path(self.arguments[0])
+        print(path)
+        print(env.app.config.html_static_path)
+        print(srcdir)
+        print(env.app.outdir)
         link_path = get_file_path(path, srcdir, doc_parent)
-    
+
+        static_absolute_path = Path(env.app.outdir) / Path("_static")
+
         # Check file exists to download
         if not link_path.is_file():
             logger.warning(f"Embed PDF not readable: {link_path}", location=(str(doc_name), int(self.lineno)))
 
         # Generate relative link to current file path
         embed_relative_link = os.path.relpath(link_path, start=doc_parent)
+        static_pdf_path = os.path.relpath(doc_parent, link_path)
 
         pdf_name = path.stem
 
@@ -258,12 +266,12 @@ class PDF_Title_Directive(SphinxDirective):
             if "hidedownload" in self.options:
                 downloadCode = ""
             else:
-                downloadCode = download_html(link=f"{RELATIVE_PATH_TO_STATIC}/{path}")
+                downloadCode = download_html(link=embed_relative_link)
 
             if "hidenewtab" in self.options:
                 newTabCode = ""
             else:
-                newTabCode = new_tab_link_html(link=f"{RELATIVE_PATH_TO_STATIC}/{path}")
+                newTabCode = new_tab_link_html(link=embed_relative_link)
             # print("PDF Link", {RELATIVE_PATH_TO_STATIC}, "/", {path})
             htmlHeaderCode = html_command(
                 f"h{header}",
@@ -285,7 +293,7 @@ class PDF_Title_Directive(SphinxDirective):
 
             if pagemode not in self.accepted_pagemode_values:
                 logger.warning(
-                    f"pagemode: {pagemode} not allowed.\n Allowed pagemode arguments: {self.accepted_pagemode_values}"
+                    f"pagemode: {pagemode} not allowed.\n Allowed pagemode arguments: {self.accepted_pagemode_values}", location=(str(doc_name), int(self.lineno))
                 )
                 pagemode = "none"
 
@@ -294,13 +302,14 @@ class PDF_Title_Directive(SphinxDirective):
             additional_class = self.options.get("class", "")
 
             pdfCode = embed_pdf_html(
-                path,
-                ratio,
-                width,
-                alt,
-                headerId + "-pdf",
-                pageMode=pagemode,
-                addClass=additional_class,
+                relative_out_dir = path,
+                ratio = ratio,
+                width = width,
+                alt = alt,
+                id = headerId + "-pdf",
+                static_pdf_path= ".",
+                page_mode=pagemode,
+                additional_class=additional_class,
                 zoom=zoom,
             )
 

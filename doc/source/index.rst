@@ -36,7 +36,7 @@ To add a download from a file, use the following code:
 
 .. or :download_file:`/_static/sample.pdf|false`.
 
-.. :download:`/_static/samples.pdf`
+:download:`samples.pdf`
 
 
 
