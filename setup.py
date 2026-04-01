@@ -7,7 +7,7 @@ requires = ['Sphinx>=7.0', 'setuptools']
 
 setup(
     name='sphinx_embedpdf',
-    version='0.0.1',
+    version='0.0.2',
     url='https://github.com/steinerAdi/sphinx-embedPDF.git',
     download_url='https://github.com/steinerAdi/sphinx-embedPDF.git',
     license='MIT',
@@ -22,7 +22,7 @@ setup(
         'Environment :: Console',
         'Environment :: Web Environment',
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: BSD License',
+        'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
         'Framework :: Sphinx :: Extension',
